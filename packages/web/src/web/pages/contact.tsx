@@ -5,9 +5,9 @@ export default function ContactPage() {
   return (
     <PageLayout>
       <SEO
-        title="Контакты"
-        description="Свяжитесь с KONNEKTEAM — IT-компания в Уральске. Телефон, WhatsApp, email. Адрес офиса на карте. Выезд специалиста за 2–4 часа."
-        keywords="контакты KONNEKTEAM, IT компания Уральск телефон, адрес KONNEKTEAM"
+        title="Контакты — IT-компания в Уральске"
+        description="KONNEKTEAM в Уральске: телефон, WhatsApp, email. Интернет для бизнеса, видеонаблюдение, информационная безопасность. Выезд специалиста за 2–4 часа."
+        keywords="KONNEKTEAM контакты, IT компания Уральск телефон, интернет для бизнеса Уральск заявка, видеонаблюдение Уральск заказать"
         canonical="https://konnekteam.kz/contacts"
       />
 
@@ -100,7 +100,7 @@ export default function ContactPage() {
           <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", height: 420 }}>
             <iframe
               title="KONNEKTEAM на карте"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=51.1800%2C51.2100%2C51.4200%2C51.3200&layer=mapnik&marker=51.2638%2C51.3676"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=51.3450%2C51.1976%2C51.3852%2C51.2177&layer=mapnik&marker=51.207676%2C51.365138"
               width="100%"
               height="420"
               style={{ border: "none", display: "block", filter: "invert(0.9) hue-rotate(180deg) brightness(0.85) contrast(1.1)" }}
