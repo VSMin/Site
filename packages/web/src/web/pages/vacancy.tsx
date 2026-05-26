@@ -164,7 +164,7 @@ export default function VacancyPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_key: "c8e1f0a3-5b2d-4e7f-a9c1-2d3e4f5a6b7c", // placeholder — replace with real key
+          access_key: "eaa2633d-7b04-4bb0-90e4-cc3f489804f2",
           subject: `Анкета кандидата — Менеджер B2B: ${info.name}`,
           from_name: info.name,
           replyto: "noreply@konnekteam.kz",
