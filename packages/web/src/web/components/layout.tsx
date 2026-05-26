@@ -50,6 +50,8 @@ export function Navbar() {
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", fn);
+    // Set initial state
+    fn();
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
@@ -72,9 +74,9 @@ export function Navbar() {
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
       height: "70px",
-      background: scrolled ? "rgba(8,8,8,0.97)" : "transparent",
-      backdropFilter: scrolled ? "blur(20px)" : "none",
-      borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "none",
+      background: scrolled ? "rgba(8,8,8,0.97)" : "rgba(8,8,8,0.85)",
+      backdropFilter: "blur(20px)",
+      borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(255,255,255,0.03)",
       transition: "all 0.4s ease",
       display: "flex", alignItems: "center",
       padding: "0 clamp(20px, 5vw, 60px)",
@@ -262,6 +264,47 @@ export function WhatsAppFloat() {
   );
 }
 
+// ── Scroll to top on navigation (not on browser back/forward) ──────────────────
+function ScrollToTop() {
+  const [location] = useLocation();
+  useEffect(() => {
+    // Only scroll to top on forward navigation, not browser back/forward
+    if (window.history.state?.scrollRestored) return;
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  // Save scroll position before navigating away
+  useEffect(() => {
+    const saveScroll = () => {
+      window.history.replaceState(
+        { ...window.history.state, scrollY: window.scrollY },
+        ""
+      );
+    };
+    window.addEventListener("click", saveScroll, { capture: true });
+    return () => window.removeEventListener("click", saveScroll, { capture: true });
+  }, []);
+
+  // Restore scroll on popstate (back/forward)
+  useEffect(() => {
+    const onPop = () => {
+      const saved = window.history.state?.scrollY;
+      if (saved != null) {
+        // Mark that this is a restore, then scroll after render
+        window.history.replaceState(
+          { ...window.history.state, scrollRestored: true },
+          ""
+        );
+        requestAnimationFrame(() => window.scrollTo(0, saved));
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  return null;
+}
+
 // ── Page wrapper ───────────────────────────────────────────────────────────────
 export function PageLayout({ children }: { children: React.ReactNode }) {
   // Scroll reveal
@@ -277,8 +320,9 @@ export function PageLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <ScrollToTop />
       <Navbar />
-      <main style={{ flex: 1, paddingTop: "70px" }}>{children}</main>
+      <main style={{ flex: 1 }}>{children}</main>
       <Footer />
       <WhatsAppFloat />
     </div>
