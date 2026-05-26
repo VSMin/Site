@@ -1,11 +1,64 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta property="og:image" content="/og-image.png" />
-		<title>Web</title>
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="icon" href="/favicon.ico" type="image/x-icon" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<meta property="og:image" content="https://konnekteam.kz/og-image.png" />
+		<title>KONNEKTEAM — IT-услуги в Уральске</title>
+
+		<!-- Schema.org LocalBusiness -->
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "LocalBusiness",
+			"name": "KONNEKTEAM",
+			"alternateName": "Коннектим",
+			"description": "Интернет для бизнеса, видеонаблюдение, информационная безопасность, ВОЛС, СКС, IPVPN в Уральске. 15 лет опыта, 500+ проектов.",
+			"url": "https://konnekteam.kz",
+			"logo": "https://konnekteam.kz/logo.png",
+			"image": "https://konnekteam.kz/og-image.png",
+			"telephone": "+77002225717",
+			"email": "sales@konnekteam.kz",
+			"foundingDate": "2011",
+			"address": {
+				"@type": "PostalAddress",
+				"streetAddress": "ул. Дины Нурпеисовой 2",
+				"addressLocality": "Уральск",
+				"addressRegion": "Западно-Казахстанская область",
+				"postalCode": "090000",
+				"addressCountry": "KZ"
+			},
+			"geo": {
+				"@type": "GeoCoordinates",
+				"latitude": 51.207676,
+				"longitude": 51.365138
+			},
+			"openingHoursSpecification": {
+				"@type": "OpeningHoursSpecification",
+				"dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+				"opens": "09:00",
+				"closes": "18:00"
+			},
+			"sameAs": [
+				"https://www.instagram.com/konnekteam/"
+			],
+			"hasOfferCatalog": {
+				"@type": "OfferCatalog",
+				"name": "IT-услуги",
+				"itemListElement": [
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Интернет для бизнеса в Уральске"}},
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Видеонаблюдение в Уральске"}},
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Информационная безопасность в Уральске"}},
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Корпоративные сети IPVPN"}},
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Волоконно-оптические линии связи ВОЛС"}},
+					{"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Проектирование и монтаж СКС"}}
+				]
+			}
+		}
+		</script>
 	</head>
 	<body>
 		<div id="root"></div>
