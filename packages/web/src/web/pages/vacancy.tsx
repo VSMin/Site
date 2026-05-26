@@ -82,12 +82,12 @@ function validateHHUrl(url: string): boolean {
 }
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/[\s\-\(\)]/g, "");
+  return phone.replace(/[\s\-\(\)\+]/g, "");
 }
 
 function validatePhone(phone: string): boolean {
   const normalized = normalizePhone(phone);
-  return /^(\+7|8)\d{10}$/.test(normalized);
+  return /^(7|8)\d{10}$/.test(normalized);
 }
 
 export default function VacancyPage() {
