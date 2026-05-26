@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { COMPANY, SERVICES } from "../lib/data";
 
@@ -267,13 +267,25 @@ export function WhatsAppFloat() {
 // ── Scroll to top on navigation (not on browser back/forward) ──────────────────
 function ScrollToTop() {
   const [location] = useLocation();
-  useEffect(() => {
-    // Only scroll to top on forward navigation, not browser back/forward
-    if (window.history.state?.scrollRestored) return;
-    window.scrollTo(0, 0);
+
+  // useLayoutEffect fires synchronously before paint — no flash
+  useLayoutEffect(() => {
+    if (window.history.state?.scrollRestored) {
+      // back/forward: restore saved position
+      const saved = window.history.state?.scrollY ?? 0;
+      window.scrollTo(0, saved);
+      // clear the flag
+      window.history.replaceState(
+        { ...window.history.state, scrollRestored: false },
+        ""
+      );
+    } else {
+      // forward navigation: scroll to top immediately
+      window.scrollTo(0, 0);
+    }
   }, [location]);
 
-  // Save scroll position before navigating away
+  // Save scroll position on every click (before wouter changes location)
   useEffect(() => {
     const saveScroll = () => {
       window.history.replaceState(
@@ -285,18 +297,13 @@ function ScrollToTop() {
     return () => window.removeEventListener("click", saveScroll, { capture: true });
   }, []);
 
-  // Restore scroll on popstate (back/forward)
+  // Mark popstate so we know it's back/forward
   useEffect(() => {
     const onPop = () => {
-      const saved = window.history.state?.scrollY;
-      if (saved != null) {
-        // Mark that this is a restore, then scroll after render
-        window.history.replaceState(
-          { ...window.history.state, scrollRestored: true },
-          ""
-        );
-        requestAnimationFrame(() => window.scrollTo(0, saved));
-      }
+      window.history.replaceState(
+        { ...window.history.state, scrollRestored: true },
+        ""
+      );
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
