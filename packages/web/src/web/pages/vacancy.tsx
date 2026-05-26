@@ -81,11 +81,13 @@ function validateHHUrl(url: string): boolean {
   }
 }
 
+function normalizePhone(phone: string): string {
+  return phone.replace(/[\s\-\(\)]/g, "");
+}
 
 function validatePhone(phone: string): boolean {
-  return /^[\+7|8][\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/.test(
-    phone.trim()
-  );
+  const normalized = normalizePhone(phone);
+  return /^(\+7|8)\d{10}$/.test(normalized);
 }
 
 export default function VacancyPage() {
@@ -154,7 +156,7 @@ export default function VacancyPage() {
     setSending(true);
 
     const body =
-      `ФИО: ${info.name}\nТелефон: ${info.phone}\nРезюме: ${info.resume}\n\n` +
+      `ФИО: ${info.name}\nТелефон: ${normalizePhone(info.phone)}\nРезюме: ${info.resume}\n\n` +
       QUESTIONS.map((q, i) => `${i + 1}. ${q.label}\nВопрос: ${q.question}\nОтвет: ${answers[q.id]}`).join("\n\n---\n\n");
 
     try {
