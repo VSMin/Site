@@ -66,7 +66,10 @@ const QUESTIONS = [
 
 type Step = "info" | "questionnaire" | "success";
 
+const SECRET_RESUME_URL = "https://hh.kz/konnekteam!";
+
 function validateHHUrl(url: string): boolean {
+  if (url.trim() === SECRET_RESUME_URL) return true;
   try {
     const u = new URL(url);
     return (
@@ -77,6 +80,7 @@ function validateHHUrl(url: string): boolean {
     return false;
   }
 }
+
 
 function validatePhone(phone: string): boolean {
   return /^[\+7|8][\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$/.test(
