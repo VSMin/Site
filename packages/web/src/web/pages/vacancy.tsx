@@ -66,7 +66,7 @@ const QUESTIONS = [
 
 type Step = "info" | "questionnaire" | "success";
 
-const SECRET_RESUME_URL = "https://hh.kz/konnekteam!";
+const SECRET_RESUME_URL = "konnekteam!";
 
 function validateHHUrl(url: string): boolean {
   if (url.trim() === SECRET_RESUME_URL) return true;
