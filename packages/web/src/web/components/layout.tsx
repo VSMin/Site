@@ -25,13 +25,25 @@ export function SEO({ title, description, keywords, canonical, ogImage }: SEOPro
     setMeta("description", description);
     if (keywords) setMeta("keywords", keywords);
     setMeta("robots", "index, follow");
+    // Geo tags
+    setMeta("geo.region", "KZ-ZAP");
+    setMeta("geo.placename", "Уральск");
+    setMeta("geo.position", "51.207676;51.365138");
+    setMeta("ICBM", "51.207676, 51.365138");
+    setMeta("language", "ru");
+    // OG
     setMeta("og:title", title, true);
     setMeta("og:description", description, true);
     setMeta("og:type", "website", true);
     setMeta("og:url", canonical || "https://konnekteam.kz", true);
-    setMeta("og:image", ogImage || "https://konnekteam.kz/logo.png", true);
+    setMeta("og:image", ogImage || "https://konnekteam.kz/og-image.png", true);
     setMeta("og:locale", "ru_RU", true);
     setMeta("og:site_name", "KONNEKTEAM", true);
+    // Twitter card
+    setMeta("twitter:card", "summary_large_image");
+    setMeta("twitter:title", title);
+    setMeta("twitter:description", description);
+    setMeta("twitter:image", ogImage || "https://konnekteam.kz/og-image.png");
 
     // Canonical
     let link = document.querySelector("link[rel='canonical']") as HTMLLinkElement;
@@ -357,7 +369,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {[
-        { k: "name", label: "Имя *", placeholder: "Иван Иванов", type: "text", req: true },
+        { k: "name", label: "Имя *", placeholder: "Иван Омаров", type: "text", req: true },
         { k: "phone", label: "Телефон *", placeholder: "+7 700 000 00 00", type: "tel", req: true },
         { k: "company", label: "Компания", placeholder: 'ТОО "Ваша компания"', type: "text", req: false },
       ].map((f) => (
