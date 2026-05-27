@@ -296,12 +296,19 @@ function starToCanvas(
   let az = Math.atan2(sinAz, cosAz); // radians, N=0
   if (az < 0) az += 2 * Math.PI;
 
-  // Equirectangular projection:
-  // South (az=180°) → x=w/2, North → x=0 or w (wraps), East → x=3w/4, West → x=w/4
-  // altitude 0° → y=h (horizon), 90° → y=0 (zenith, top)
-  const azShifted = (az - Math.PI + 2 * Math.PI) % (2 * Math.PI); // remap so S=0
-  const cx = (azShifted / (2 * Math.PI)) * w;
-  const cy = h - (altRad / (Math.PI / 2)) * h;
+  // Stereographic (planisphere) projection — full sky on a rectangle.
+  // Zenith distance r = 0 at top-center, grows toward horizon.
+  // Azimuth maps around the center: N=top, S=bottom, E=right, W=left.
+  // We map the hemisphere onto the canvas rectangle:
+  //   zenith → top-center, N-horizon → top-edge, S-horizon → bottom-center
+  // Scale: horizon (alt=0) maps to radius R from canvas center.
+  const zenith = Math.PI / 2 - altRad; // 0 at zenith, π/2 at horizon
+  // Use orthographic (sin) for more natural star density near horizon
+  const R = Math.min(w * 0.55, h * 0.9);
+  const r = (zenith / (Math.PI / 2)) * R;
+  // az: N=0 up, E=π/2 right, S=π down, W=3π/2 left
+  const cx = w / 2 + r * Math.sin(az);
+  const cy = h * 0.42 - r * Math.cos(az); // center slightly above canvas middle
 
   return [cx, cy, altRad];
 }
