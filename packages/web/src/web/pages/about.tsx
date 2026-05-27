@@ -51,10 +51,10 @@ export default function AboutPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             {[
-              { num: "10+", label: "лет опыта" },
-              { num: "350+", label: "проектов" },
+              { num: "15+", label: "лет опыта" },
               { num: "350+", label: "проектов" },
               { num: "24/7", label: "поддержка" },
+              { num: "2010", label: "год основания" },
             ].map(s => (
               <div key={s.label} className="card" style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "2.2rem", fontWeight: 800, color: "var(--accent)" }}>{s.num}</div>
