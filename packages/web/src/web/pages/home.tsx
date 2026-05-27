@@ -386,25 +386,19 @@ function ParticleCanvas() {
       }
     };
 
-    // Колёсико мыши — добавить/убрать частицы (только средняя кнопка + scroll)
-    const onWheel = (e: WheelEvent) => {
-      if (e.buttons !== 4 && !e.ctrlKey) {
-        // Средняя кнопка зажата (buttons=4) ИЛИ просто колёсико на canvas
-        // Работаем на любой scroll пока мышь на canvas
-        e.preventDefault();
-        if (e.deltaY < 0) {
-          // вверх — добавляем
-          if (particles.length < MAX_PARTICLES) {
-            for (let i = 0; i < 5; i++) particles.push(makeParticle());
-          }
-        } else {
-          // вниз — убираем
-          if (particles.length > MIN_PARTICLES) {
-            particles.splice(particles.length - 5, 5);
-          }
+    // Клавиши + / - — добавить/убрать частицы (только десктоп)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "+" || e.key === "=") {
+        if (particles.length < MAX_PARTICLES) {
+          for (let i = 0; i < 5; i++) particles.push(makeParticle());
+        }
+      } else if (e.key === "-" || e.key === "_") {
+        if (particles.length > MIN_PARTICLES) {
+          particles.splice(particles.length - 5, 5);
         }
       }
     };
+    window.addEventListener("keydown", onKey);
     const onMove = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
       const src = "touches" in e ? e.touches[0] : e;
@@ -417,11 +411,9 @@ function ParticleCanvas() {
     canvas.addEventListener("mouseleave", onLeave);
     // Also track on the parent section so hero text doesn't block events
     const section = canvas.parentElement;
-    canvas.addEventListener("wheel", onWheel, { passive: false });
     if (section) {
       section.addEventListener("mousemove", onMove);
       section.addEventListener("mouseleave", onLeave);
-      section.addEventListener("wheel", onWheel, { passive: false });
     }
 
     const draw = (now: number) => {
@@ -591,15 +583,14 @@ function ParticleCanvas() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("keydown", onKey);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("touchmove", onMove);
       canvas.removeEventListener("mouseleave", onLeave);
-      canvas.removeEventListener("wheel", onWheel);
       if (section) {
         section.removeEventListener("mousemove", onMove);
         section.removeEventListener("mouseleave", onLeave);
-        section.removeEventListener("wheel", onWheel);
       }
     };
   }, []);
