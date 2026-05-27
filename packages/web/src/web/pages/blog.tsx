@@ -38,8 +38,12 @@ function BlogList() {
                   }}
                 >
                   {post.image && (
-                    <div style={{ height: 180, marginBottom: 20, borderRadius: 6, overflow: "hidden", background: "rgba(227,30,36,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem" }}>
-                      {post.emoji || "📝"}
+                    <div style={{ height: 180, marginBottom: 20, borderRadius: 6, overflow: "hidden", background: "rgba(227,30,36,0.08)" }}>
+                      {typeof post.image === "string" ? (
+                        <img src={post.image} alt={post.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: "3rem" }}>{post.emoji || "📝"}</div>
+                      )}
                     </div>
                   )}
                   <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
