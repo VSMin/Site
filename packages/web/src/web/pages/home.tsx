@@ -32,6 +32,15 @@ function ParticleCanvas() {
 
     let lastFrameTime = 0;
     let hidden = false;
+    // Цвета по кругу: красный → жёлтый → белый → голубой
+    const COLOR_CYCLE = [
+      [227, 30, 36],   // красный
+      [255, 200, 0],   // жёлтый
+      [255, 255, 255], // белый
+      [0, 180, 255],   // голубой
+    ];
+    let colorIdx = 0;
+    let currentColor = COLOR_CYCLE[0];
     // Состояние взрыва
     let exploding = false;
     let explodeFlash = 0;    // яркость вспышки 0..1
@@ -65,6 +74,9 @@ function ParticleCanvas() {
       exploding = true;
       explodeFlash = 1.0;
       explodeCooldown = 180; // ~3 секунды при 60fps
+      // Меняем цвет на следующий в цикле
+      colorIdx = (colorIdx + 1) % COLOR_CYCLE.length;
+      currentColor = COLOR_CYCLE[colorIdx];
       for (const p of particles) {
         const dx = p.x - mouseX, dy = p.y - mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -121,10 +133,11 @@ function ParticleCanvas() {
       if (explodeFlash > 0) {
         explodeFlash = Math.max(0, explodeFlash - 0.04);
         // Рисуем вспышку — радиальный градиент от точки курсора
+        const [cr, cg, cb] = currentColor;
         const grd = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 300);
-        grd.addColorStop(0, `rgba(227,30,36,${explodeFlash * 0.7})`);
-        grd.addColorStop(0.4, `rgba(227,30,36,${explodeFlash * 0.15})`);
-        grd.addColorStop(1, "rgba(227,30,36,0)");
+        grd.addColorStop(0, `rgba(${cr},${cg},${cb},${explodeFlash * 0.7})`);
+        grd.addColorStop(0.4, `rgba(${cr},${cg},${cb},${explodeFlash * 0.15})`);
+        grd.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         if (explodeFlash === 0) exploding = false;
@@ -178,9 +191,10 @@ function ParticleCanvas() {
         else if (p.y > canvas.height + margin) p.y = -margin;
 
         // Draw particle
+        const [pr, pg, pb] = currentColor;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(227,30,36,${p.alpha})`;
+        ctx.fillStyle = `rgba(${pr},${pg},${pb},${p.alpha})`;
         ctx.fill();
       }
 
@@ -200,7 +214,7 @@ function ParticleCanvas() {
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = `rgba(227,30,36,${t * t * 0.35})`;
+            ctx.strokeStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},${t * t * 0.35})`;
             ctx.lineWidth = t * 1.2;
             ctx.stroke();
             connCount[i]++;
@@ -219,14 +233,14 @@ function ParticleCanvas() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouseX, mouseY);
-            ctx.strokeStyle = `rgba(227,30,36,${t * 0.75})`;
+            ctx.strokeStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},${t * 0.75})`;
             ctx.lineWidth = t * 1.8;
             ctx.stroke();
           }
         }
         ctx.beginPath();
         ctx.arc(mouseX, mouseY, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(227,30,36,0.9)";
+        ctx.fillStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},0.9)`;
         ctx.fill();
       }
 
@@ -253,7 +267,7 @@ function ParticleCanvas() {
       ref={canvasRef}
       style={{
         position: "absolute", inset: 0, width: "100%", height: "100%",
-        display: "block", pointerEvents: "none",
+        display: "block", pointerEvents: "none", cursor: "default",
       }}
     />
   );
@@ -293,7 +307,7 @@ export default function HomePage() {
       />
 
       {/* HERO */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", background: "#0A0A0A" }}>
+      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden", background: "#0A0A0A", userSelect: "none" }}>
         <ParticleCanvas />
         <div style={{ position: "relative", zIndex: 2, maxWidth: 1200, margin: "0 auto", padding: "0 24px", width: "100%" }}>
           <div style={{ maxWidth: 700 }}>
