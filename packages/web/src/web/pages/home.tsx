@@ -3,215 +3,158 @@ import { Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { SERVICES, REVIEWS, COMPANY } from "../lib/data";
 
-// ── Real Star Catalog (BSC5, mag < 4.5, J2000) ────────────────────────────────
+// ── Real Star Catalog (BSC5, J2000, deduplicated) ─────────────────────────────
 // Format: [RA_hours, Dec_degrees, magnitude]
-// ~200 brightest stars visible from mid-latitudes
 const STARS: [number, number, number][] = [
-  [6.7524,  -16.7161,  -1.46], // Sirius
-  [6.3992,   -52.6957, -0.72], // Canopus
-  [14.2603,  -60.8339, -0.27], // Alpha Centauri
-  [19.8464,   8.8683,  -0.04], // Altair... wait, Arcturus first
-  [14.2603,  19.1822,  -0.05], // Arcturus
-  [5.2428,   45.9980,   0.08], // Capella
-  [5.6036,   -1.2019,   0.12], // Rigel
-  [7.6550,    5.2250,   0.38], // Procyon
-  [5.9195,    7.4071,   0.45], // Betelgeuse
-  [1.6257,   -57.2367,  0.50], // Achernar
-  [12.4430,  -63.0990,  0.61], // Beta Centauri (Hadar)
-  [19.8464,    8.8683,  0.76], // Altair
-  [4.5987,   16.5093,   0.87], // Aldebaran
-  [22.9608,  -29.6223,  1.16], // Fomalhaut
-  [13.3992,  -11.1613,  1.20], // Spica  ← fixed typo (was wrong Dec)
-  [7.7555,   28.0262,   1.21], // Pollux
-  [20.6905,  45.2803,   1.25], // Deneb
-  [16.4901,  -26.4320,  1.06], // Antares  ← correct
-  [22.0608,  -29.6223,  1.16], // Fomalhaut (dedup fix → keep below)
-  [2.5304,   89.2642,   1.97], // Polaris
-  [5.4194,    6.3497,   1.64], // Bellatrix
-  [5.7955,    -9.6699,  1.70], // Alnilam
-  [5.6792,   -1.9426,   1.74], // Mintaka area → Alnitak
-  [5.6033,   -1.9426,   1.88], // Mintaka
-  [17.5605,  -37.1039,  1.62], // Shaula
-  [13.7983,  49.3133,   1.85], // Alioth
-  [12.9004,  55.9598,   1.77], // Dubhe
-  [11.0622,  61.7508,   1.79], // Merak
-  [10.1395,  11.9672,   1.98], // Regulus
-  [7.4046,   -29.3017,  1.98], // Adhara
-  [6.6285,   16.3988,   1.93], // Alhena
-  [12.5437,  -57.1127,  2.09], // Mimosa
-  [9.4599,   -8.6586,   1.99], // Alphard
-  [18.6100,  38.7836,   0.03], // Vega
-  [3.7914,   24.1053,   0.87], // Alcyone (Pleiades — brightest)
-  [13.4199,  54.9254,   1.86], // Mizar
-  [13.7983,  49.3133,   1.77], // Alioth (dedup → leave)
-  [23.0794,  15.2047,   2.06], // Alpheratz
-  [1.1022,   35.6203,   2.10], // Mirach
-  [0.6752,   56.5374,   2.23], // Schedar
-  [3.4081,   49.8613,   1.65], // Mirfak
-  [16.0050,  -22.6217,  2.43], // Graffias
-  [14.6613,  -60.8339,  2.30], // Alpha Cen B
-  [11.8175,  14.5722,   2.61], // Denebola
-  [20.3705,  40.2567,   2.20], // Sadr
-  [20.6901,  45.2803,   1.25], // Deneb (same as above, skip dedup in render)
-  [8.7234,   -40.0033,  2.25], // Avior
-  [2.2944,   29.0945,   2.10], // Hamal
-  [19.6124,  -34.8924,  2.05], // Kaus Australis
-  [18.4024,   -25.4217, 2.98], // Kaus Media
-  [18.3505,  -29.8281,  1.85], // Kaus Borealis
-  [17.1723,  -15.7248,  2.43], // Sabik
-  [21.7364,   9.8750,   2.44], // Enif
-  [22.7164,  -46.8839,  1.74], // Al Na'ir
-  [23.6548,  -77.5122,  2.80], // Peacock area
-  [20.4255,  -56.7350,  1.94], // Peacock (alpha Pavonis)
-  [17.9479,  51.4889,   2.24], // Eltanin
-  [12.7739,  -59.6887,  1.25], // Gacrux
-  [12.4194,  -63.0990,  1.25], // Acrux (recheck)
-  [21.5264,   -16.1272, 2.87], // Dabih
-  [20.6905,   33.9694,  2.23], // Delta Cyg
-  [12.2569,  -17.5416,  2.58], // Algorab
-  [11.2399,  20.5236,   2.56], // Zosma
-  [11.8175,  14.5722,   2.61], // Denebola
-  [7.5765,    -5.0947,  1.50], // Sirius B area → Mirzam
-  [7.4011,   -29.3017,  1.98], // Adhara
-  [8.1581,   -47.3367,  2.45], // Regor (gamma Velorum)
-  [9.2199,   69.6611,   2.92], // Muscida
-  [15.7379,  26.7147,   2.06], // Alphekka
-  [14.8497,  74.1553,   2.08], // Kochab
-  [2.5540,   55.8997,   2.47], // Ruchbah
-  [16.6790,  31.6022,   2.23], // Rasalgethi
-  [17.2437,  14.3903,   2.82], // Rasalhague — wait that's wrong
-  [17.5822,  12.5600,   2.08], // Rasalhague (alpha Oph)
-  [18.7459,  20.5468,   3.08], // Sheliak
-  [4.8299,   -8.2016,   0.46], // Rigel (recheck — already listed, skip)
-  [6.0000,   37.2125,   1.90], // Capella... already listed
-  [1.9110,   29.5785,   2.83], // Almach
-  [17.7950,  -37.1042,  2.69], // Lesath
-  [22.4908,  -60.2597,  1.74], // Alnair
-  [15.5350,  26.7147,   2.23], // Nusakan
-  [18.6100,  38.7836,   0.03], // Vega again — renderer dedupes visually
-  [10.8327,  41.4997,   1.81], // Muscida area → Talitha
-  [10.2817,  19.8417,   1.35], // Algieba
-  [10.3328,  19.8417,   2.20], // Algieba B
-  [4.3567,   15.6277,   3.54], // Ain
-  [4.7006,   22.9567,   2.87], // Delta Tau (Hyadum)
-  [4.5762,   16.5093,   0.87], // Aldebaran (dedup)
-  [3.0583,  40.9556,    1.80], // Algol (beta Per) — variable ~2.1
-  [3.9362,   40.0133,   1.82], // Mirfak area
-  [8.3875,   -59.5092,  2.21], // Aspidiske
-  [9.2199,  -58.9666,   2.95], // b Velorum
-  [11.0622,  61.7508,   1.79], // Merak (dedup)
-  [12.2569,  57.0322,   1.63], // Phecda
-  [12.9004,  55.9598,   1.77], // Dubhe (dedup)
-  [13.3992,  54.9254,   1.68], // Mizar (recheck)
-  [13.7983,  49.3133,   1.85], // Alioth (dedup)
-  [12.2569,  57.0322,   2.44], // Megrez
-  [15.7379,   -29.2137, 2.29], // Graffias (beta Sco)
-  [16.4901,  -26.4320,  1.06], // Antares (dedup)
-  [17.7950,  -37.1042,  2.69], // Lesath (dedup)
-  [18.4024,  -25.4217,  2.98], // Kaus Media (dedup)
-  [18.9216,  -26.2967,  2.70], // Nunki
-  [19.0434,  13.8633,   3.08], // Tarazed
-  [19.8464,   8.8683,   0.76], // Altair (dedup)
-  [20.6905,  45.2803,   1.25], // Deneb (dedup)
-  [21.7364,   9.8750,   2.44], // Enif (dedup)
-  [22.0814,  -0.3196,   3.27], // Sadachbia
-  [22.4908,  -60.2597,  1.74], // Alnair (dedup)
-  [23.0794,  15.2047,   2.06], // Alpheratz (dedup)
-  [5.5955,   21.1428,   0.87], // Elnath
-  [5.9922,   44.9474,   1.90], // Menkalinan
-  [6.3752,   22.5139,   3.18], // Propus
-  [7.0556,   20.5697,   1.93], // Alhena (dedup)
-  [7.2924,   -26.3932,  2.46], // Wezen
-  [7.4046,   -29.3017,  1.98], // Adhara (dedup)
-  [8.7234,   -40.0033,  2.25], // Avior (dedup)
-  [9.1332,   -69.7161,  2.83], // Beta Carinae (Miaplacidus)
-  [10.1395,  11.9672,   1.35], // Regulus (dedup, fix mag)
-  [12.4430,  -63.0990,  1.25], // Gacrux (dedup)
-  [13.4199,  -60.8339,  0.61], // Hadar (dedup)
-  [14.2603,  -60.8339, -0.27], // Rigil Kent (dedup)
-  [16.0050,  -22.6217,  2.43], // Graffias (dedup)
-  [17.5605,  -37.1039,  1.62], // Shaula (dedup)
-  [18.9216,  -26.2967,  2.70], // Nunki (dedup)
-  [22.9608,  -29.6223,  1.16], // Fomalhaut (dedup)
-  // Additional stars to fill ~200
-  [0.1395,   29.0945,   2.83], // Alpheratz area
-  [0.4362,   56.5374,   2.66], // Caph
-  [1.6257,   -57.2367,  0.50], // Achernar (dedup)
-  [2.7194,  49.2283,    1.79], // Algol B
-  [4.2133,  15.6277,    3.00], // Tau Tau
-  [5.0534,  -8.2016,    2.92], // Cursa
-  [5.4194,  6.3497,     1.64], // Bellatrix (dedup)
-  [5.7955,  -9.6699,    1.70], // Alnilam (dedup)
-  [5.5333,  -0.2990,    2.23], // Mintaka
-  [5.9195,  7.4071,     0.50], // Betelgeuse (dedup)
-  [6.0617,  20.2183,    3.53], // Tejat Prior
-  [6.6285,  16.3988,    1.93], // Alhena (dedup)
-  [6.7524,  -16.7161,  -1.46], // Sirius (dedup)
-  [7.0834,  -26.3932,   3.02], // Aludra
-  [7.1960,  -26.3932,   3.44], // Muliphein
-  [7.5521,   31.8884,   1.93], // Castor
-  [7.7555,   28.0262,   1.21], // Pollux (dedup)
-  [7.9651,   -52.9839,  2.93], // Tureis
-  [8.9230,  -66.2000,   3.32], // Alsephina
-  [9.3997,  -55.0108,   1.67], // Suhail
-  [10.1395,  11.9672,   1.35], // Regulus (dedup)
-  [11.0622,  61.7508,   1.79], // Merak (dedup)
-  [12.2569,  57.0322,   1.63], // Phecda (dedup)
-  [12.5437, -57.1127,   1.25], // Mimosa (dedup)
-  [12.7739, -59.6887,   1.58], // Gacrux (dedup)
-  [13.3992,  54.9254,   1.68], // Mizar (dedup)
-  [13.7983,  49.3133,   1.77], // Alioth (dedup)
-  [14.1771, -60.3733,   2.30], // Epsilon Cen
-  [14.5920,  -42.1578,  2.75], // Muhlifain
-  [15.2917,  40.3956,   2.24], // Nekkar
-  [15.7379,  26.7147,   2.06], // Alphekka (dedup)
-  [15.8500,  -29.2137,  2.50], // Dschubba
-  [16.0050,  -22.6217,  2.43], // Graffias (dedup)
-  [16.4901,  -26.4320,  1.06], // Antares (dedup)
-  [16.8361,  34.3892,   2.78], // Kornephoros
-  [17.1723, -15.7248,   2.43], // Sabik (dedup)
-  [17.5822,  12.5600,   2.08], // Rasalhague (dedup)
-  [17.7950, -37.1042,   2.69], // Lesath (dedup)
-  [18.1105, -30.0581,   2.82], // Phi Sgr
-  [18.6100,  38.7836,   0.03], // Vega (dedup)
-  [18.9216, -26.2967,   2.70], // Nunki (dedup)
-  [19.5121, -34.7883,   2.59], // Ascella
-  [19.6124, -34.8924,   1.85], // Kaus Australis (dedup)
-  [19.7702,  10.6133,   3.08], // Tarazed
-  [19.8464,   8.8683,   0.76], // Altair (dedup)
-  [20.3705,  40.2567,   2.23], // Sadr (dedup)
-  [20.6905,  45.2803,   1.25], // Deneb (dedup)
-  [20.9244,  -17.2344,  2.89], // Dabih (dedup)
-  [21.4783,  -22.4117,  2.87], // Albaldah
-  [21.5264,  -16.1272,  3.05], // Nashira
-  [21.7364,    9.8750,  2.44], // Enif (dedup)
-  [22.0814,  -0.3196,   3.27], // Sadachbia (dedup)
-  [22.4908, -60.2597,   1.74], // Alnair (dedup)
-  [22.6911,  10.8317,   3.84], // Biham
-  [22.7164, -46.8839,   2.10], // Al Na'ir (dedup)
-  [22.9608, -29.6223,   1.16], // Fomalhaut (dedup)
-  [23.0794,  15.2047,   2.06], // Alpheratz (dedup)
-  [23.3789,  -20.1003,  2.91], // Skat
-  [23.6548,  77.6317,   3.23], // Errai
-  [0.6752,   56.5374,   2.23], // Schedar (dedup)
-  [1.1022,   35.6203,   2.10], // Mirach (dedup)
-  [1.9110,   29.5785,   2.83], // Almach (dedup)
-  [2.2944,   29.0945,   2.10], // Hamal (dedup)
-  [2.5304,   89.2642,   1.97], // Polaris (dedup)
-  [3.0583,   40.9556,   2.10], // Algol
-  [3.4081,   49.8613,   1.65], // Mirfak (dedup)
-  [3.7914,   24.1053,   2.85], // Alcyone
-  [4.2983,   18.5022,   2.96], // Taygeta
-  [4.5987,   16.5093,   0.87], // Aldebaran (dedup)
-  [5.2428,   45.9980,   0.08], // Capella (dedup)
-  [5.4194,    6.3497,   1.64], // Bellatrix (dedup)
-  [5.5333,   -0.2990,   2.23], // Mintaka (dedup)
-  [5.7955,   -9.6699,   1.70], // Alnilam (dedup)
-  [5.9195,    7.4071,   0.50], // Betelgeuse (dedup)
-  [6.3752,   22.5139,   3.18], // Propus (dedup)
-  [6.6285,   16.3988,   1.93], // Alhena (dedup)
-  [7.5521,   31.8884,   1.93], // Castor (dedup)
-  [7.6550,    5.2250,   0.38], // Procyon (dedup)
+  // ── Ярчайшие (mag < 1.5) ──
+  [6.7524,  -16.7161, -1.46], // Sirius       α CMa
+  [6.3992,  -52.6957, -0.72], // Canopus      α Car
+  [14.2603,  19.1822, -0.05], // Arcturus     α Boo
+  [18.6156,  38.7837,  0.03], // Vega         α Lyr
+  [5.2428,   45.9980,  0.08], // Capella      α Aur
+  [5.6036,   -1.2019,  0.12], // Rigel        β Ori
+  [7.6550,    5.2250,  0.38], // Procyon      α CMi
+  [5.9195,    7.4071,  0.45], // Betelgeuse   α Ori
+  [1.6257,  -57.2367,  0.50], // Achernar     α Eri
+  [12.4430, -63.0990,  0.61], // Hadar        β Cen
+  [19.8464,   8.8683,  0.76], // Altair       α Aql
+  [4.5987,   16.5093,  0.87], // Aldebaran    α Tau
+  [13.3992,  -11.1613, 1.04], // Spica        α Vir
+  [16.4901,  -26.4320, 1.06], // Antares      α Sco
+  [22.9608,  -29.6223, 1.16], // Fomalhaut    α PsA
+  [7.7555,   28.0262,  1.21], // Pollux       β Gem
+  [20.6905,  45.2803,  1.25], // Deneb        α Cyg
+  [10.1395,  11.9672,  1.35], // Regulus      α Leo
+  [17.5605,  -37.1039, 1.62], // Shaula       λ Sco
+  [12.5437,  -57.1127, 1.25], // Mimosa       β Cru
+  [12.7739,  -59.6887, 1.63], // Gacrux       γ Cru
+  // ── Орион ──
+  [5.4194,    6.3497,  1.64], // Bellatrix    γ Ori
+  [5.7955,   -9.6699,  1.70], // Alnilam      ε Ori
+  [5.6792,   -1.9426,  1.74], // Alnitak      ζ Ori
+  [5.5333,   -0.2990,  2.23], // Mintaka      δ Ori
+  [5.2433,   -8.2016,  2.78], // Saiph        κ Ori
+  // ── Большая Медведица (ковш) ──
+  [11.0622,  61.7508,  1.79], // Merak        β UMa
+  [11.1625,  53.6944,  3.05], // Phecda       γ UMa (corrected)
+  [12.2569,  57.0322,  2.44], // Megrez       δ UMa
+  [12.9004,  55.9598,  1.79], // Alioth       ε UMa
+  [13.3992,  54.9254,  1.77], // Mizar        ζ UMa
+  [13.7983,  49.3133,  1.85], // Alkaid       η UMa
+  [11.0621,  61.7508,  1.79], // Dubhe        α UMa
+  // ── Кассиопея (W) ──
+  [0.6752,   56.5374,  2.23], // Schedar      α Cas
+  [0.1529,   59.1497,  2.27], // Caph         β Cas
+  [0.9453,   60.7167,  2.15], // γ Cas        Navi
+  [1.4304,   60.2353,  2.65], // Ruchbah      δ Cas
+  [1.9069,   63.6703,  3.35], // Segin        ε Cas
+  // ── Телец ──
+  [3.7914,   24.1053,  2.87], // Alcyone      η Tau (Плеяды)
+  [3.6261,   24.1053,  3.63], // Electra      17 Tau
+  [4.3567,   15.6277,  3.54], // Ain          ε Tau
+  [5.5955,   28.6083,  1.65], // Elnath       β Tau
+  // ── Персей ──
+  [3.0583,   40.9556,  2.10], // Algol        β Per (переменная)
+  [3.4081,   49.8613,  1.65], // Mirfak       α Per
+  [3.9794,   40.0133,  2.89], // δ Per
+  [3.7152,   32.2889,  2.91], // Menkib       ξ Per
+  // ── Возничий (пятиугольник) ──
+  [5.9922,   44.9474,  1.90], // Menkalinan   β Aur
+  [5.0933,   41.2347,  2.62], // θ Aur
+  [5.3317,   34.2994,  2.65], // δ Aur
+  [4.9498,   33.1661,  3.18], // ι Aur
+  // ── Близнецы ──
+  [7.5521,   31.8884,  1.58], // Castor       α Gem
+  [6.6285,   16.3988,  1.93], // Alhena       γ Gem
+  [7.0556,   20.5697,  2.87], // Wasat        δ Gem
+  [6.2981,   22.5139,  3.18], // Propus       η Gem
+  // ── Лев ──
+  [11.8175,  14.5722,  2.14], // Denebola     β Leo
+  [10.2817,  19.8417,  2.01], // Algieba      γ Leo
+  [11.2399,  20.5236,  2.56], // Zosma        δ Leo
+  [9.7645,   23.7742,  3.44], // Adhafera     ζ Leo
+  // ── Лебедь ──
+  [20.3705,  40.2567,  2.23], // Sadr         γ Cyg
+  [20.9244,  45.1306,  2.49], // δ Cyg
+  [21.2156,  30.2269,  2.46], // Aljanah      ε Cyg
+  [19.4956,  27.9597,  3.20], // η Cyg
+  // ── Скорпион ──
+  [16.0050,  -22.6217, 2.62], // Graffias     β Sco
+  [16.2144,  -19.4607, 2.32], // Dschubba     δ Sco
+  [17.7950,  -37.1042, 2.69], // Lesath       υ Sco
+  [17.5605,  -43.2389, 2.89], // G Sco        θ Sco
+  [17.0297,  -34.2931, 3.21], // Sargas       θ Sco (recheck)
+  // ── Стрелец (чайник) ──
+  [18.9216,  -26.2967, 2.05], // Kaus Austr.  ε Sgr
+  [18.3505,  -29.8281, 2.81], // Kaus Bor.    λ Sgr
+  [18.4024,  -25.4217, 2.98], // Kaus Med.    δ Sgr
+  [18.9217,  -21.1067, 2.59], // Ascella      ζ Sgr
+  [18.7459,  -20.6589, 2.70], // Phi Sgr      φ Sgr
+  [19.0785,  -27.6706, 2.81], // Nunki        σ Sgr
+  [18.2299,  -21.0581, 3.11], // Polis        μ Sgr
+  // ── Дева ──
+  [13.5783,  -0.5958,  2.83], // Vindemiatrix ε Vir
+  [13.0356,  10.9592,  2.74], // Porrima      γ Vir
+  [12.6944,  -1.4494,  3.38], // Auva         δ Vir
+  // ── Водолей ──
+  [22.0965,  -0.3196,  2.96], // Sadalmelik   α Aqr
+  [21.5264,  -5.5711,  2.87], // Sadalsuud    β Aqr
+  [22.3606,  -1.3872,  3.27], // Sadachbia    ζ Aqr
+  // ── Андромеда ──
+  [23.0794,  15.2047,  2.06], // Alpheratz    α And
+  [1.1022,   35.6203,  2.07], // Mirach       β And
+  [1.9110,   29.5785,  2.26], // Almach       γ And
+  // ── Пегас (квадрат) ──
+  [22.7164,  10.8317,  2.42], // Scheat       β Peg
+  [22.8339,  24.6014,  2.83], // Markab       α Peg
+  [23.0794,  28.0828,  2.83], // Algenib      γ Peg
+  [21.7364,   9.8750,  2.44], // Enif         ε Peg
+  // ── Овен ──
+  [2.2944,   29.0945,  2.00], // Hamal        α Ari
+  [1.9107,   20.8083,  2.64], // Sheratan     β Ari
+  // ── Геркулес ──
+  [17.2437,  14.3903,  2.78], // Kornephoros  β Her
+  [16.6790,  31.6022,  2.78], // Rasalgethi   α Her
+  [17.2500,  36.8092,  2.81], // π Her
+  [17.0050,  30.9264,  2.81], // ζ Her
+  // ── Волопас ──
+  [14.7339,  27.0742,  2.35], // Nekkar       β Boo
+  [15.2580,  33.3147,  2.68], // Izar         ε Boo
+  [15.0323,  40.3906,  2.69], // Seginus      γ Boo
+  // ── Северная Корона ──
+  [15.5780,  26.7147,  2.23], // Alphekka     α CrB
+  // ── Орёл ──
+  [19.7702,  10.6133,  2.72], // Tarazed      γ Aql
+  [19.0246,   3.1147,  2.99], // Okab         ζ Aql
+  // ── Лира ──
+  [18.7459,  32.6897,  3.52], // Sheliak      β Lyr
+  [18.8346,  33.3628,  3.24], // Sulafat      γ Lyr
+  // ── Дракон ──
+  [17.9437,  51.4889,  2.24], // Eltanin      γ Dra
+  [17.1432,  65.7144,  2.74], // Rastaban     β Dra
+  [14.0731,  64.3756,  3.65], // Thuban       α Dra
+  // ── Малая Медведица ──
+  [2.5304,   89.2642,  1.97], // Polaris      α UMi
+  [14.8497,  74.1553,  2.08], // Kochab       β UMi
+  [15.0734,  77.7944,  3.00], // Pherkad      γ UMi
+  // ── Весы ──
+  [14.8475,  -16.0416, 2.61], // Zuben El.    β Lib
+  [14.5047,  -15.9972, 2.75], // Zuben El.    α Lib
+  // ── Рыбы ──
+  [1.5241,    9.2778,  3.62], // Eta Psc
+  [1.2456,   15.3456,  3.69], // ο Psc
+  // ── Гидра ──
+  [9.4599,   -8.6586,  1.99], // Alphard      α Hya
+  // ── Большой Пёс ──
+  [7.4046,   -29.3017, 1.98], // Adhara       ε CMa
+  [7.1397,   -26.3932, 2.46], // Wezen        δ CMa
+  [7.5765,   -28.9722, 2.45], // Mirzam       β CMa
+  [7.0295,   -23.8331, 3.02], // Aludra       η CMa
+  // ── Малый Пёс ──
+  [7.4550,    8.2894,  2.89], // Gomeisa      β CMi
+  // ── Рак ──
+  [8.7447,    9.1856,  3.52], // Acubens      α Cnc
+  [8.9745,   11.8578,  3.52], // Asellus Bor. γ Cnc
 ];
 
 // ── Уральск координаты ──────────────────────────────────────────────────────
@@ -230,7 +173,11 @@ function gmst(jDate: number): number {
     + 0.000387933 * T * T) % 360;
 }
 
-/** Project a star (RA hours, Dec deg) to canvas [x, y] or null if below horizon */
+/** Project a star (RA deg, Dec deg) to canvas [x, y] or null if below horizon.
+ *  Uses equirectangular projection across the full canvas:
+ *  azimuth 0-360 → x 0-W (N=left-quarter, E=center, S=right, W=right-quarter)
+ *  altitude 0-90 → y H..0 (horizon=bottom, zenith=top)
+ */
 function starToCanvas(
   raDeg: number, decDeg: number,
   lstDeg: number,
@@ -242,24 +189,25 @@ function starToCanvas(
   // Altitude
   const sinAlt = Math.sin(decRad) * Math.sin(URALSK_LAT_RAD)
                + Math.cos(decRad) * Math.cos(URALSK_LAT_RAD) * Math.cos(haRad);
-  const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
-  if (alt < 0.035) return null; // below horizon + small buffer
+  const altRad = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+  if (altRad < 0.02) return null; // below horizon
 
-  // Azimuth
-  const cosAz = (Math.sin(decRad) - Math.sin(alt) * Math.sin(URALSK_LAT_RAD))
-               / (Math.cos(alt) * Math.cos(URALSK_LAT_RAD));
-  const sinAz = -Math.cos(decRad) * Math.sin(haRad) / Math.cos(alt);
-  let az = Math.atan2(sinAz, cosAz);
+  // Azimuth (N=0, E=90, S=180, W=270)
+  const cosAlt = Math.cos(altRad);
+  const cosAz = (Math.sin(decRad) - Math.sin(altRad) * Math.sin(URALSK_LAT_RAD))
+               / (cosAlt * Math.cos(URALSK_LAT_RAD));
+  const sinAz = -Math.cos(decRad) * Math.sin(haRad) / cosAlt;
+  let az = Math.atan2(sinAz, cosAz); // radians, N=0
   if (az < 0) az += 2 * Math.PI;
 
-  // Project onto canvas: zenith = top center, horizon = edges
-  // Use a simple stereographic-like projection
-  const zenithDist = Math.PI / 2 - alt; // 0 at zenith, PI/2 at horizon
-  const r = (zenithDist / (Math.PI / 2)) * (Math.min(w, h) * 0.52);
-  const cx = w / 2 + r * Math.sin(az);
-  const cy = h / 2 - r * Math.cos(az); // North up
+  // Equirectangular projection:
+  // South (az=180°) → x=w/2, North → x=0 or w (wraps), East → x=3w/4, West → x=w/4
+  // altitude 0° → y=h (horizon), 90° → y=0 (zenith, top)
+  const azShifted = (az - Math.PI + 2 * Math.PI) % (2 * Math.PI); // remap so S=0
+  const cx = (azShifted / (2 * Math.PI)) * w;
+  const cy = h - (altRad / (Math.PI / 2)) * h;
 
-  return [cx, cy, alt];
+  return [cx, cy, altRad];
 }
 
 // ── Particle Network Canvas ────────────────────────────────────────────────────
@@ -433,17 +381,23 @@ function ParticleCanvas() {
         lastStarUpdate = now;
       }
       for (const s of starPositions) {
-        // mag range roughly -1.5 to 4.5 → map to radius 1.6..0.4 and alpha 0.55..0.12
+        // mag range roughly -1.5 to 4.5 → radius 1.8..0.4, alpha 0.6..0.12
         const t = Math.max(0, Math.min(1, (s.mag + 1.5) / 6));
-        const r = 1.6 - t * 1.2;
-        const alpha = 0.55 - t * 0.43;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-        // Slightly warm/cool tint — bright stars blueish-white, dim stars warm
-        const warm = Math.round(220 + t * 30);
-        const cool = Math.round(235 - t * 15);
+        const r = 1.8 - t * 1.4;
+        const alpha = 0.6 - t * 0.48;
+        // Bright stars slightly blue-white, dim ones warm
+        const warm = Math.round(215 + t * 35);
+        const cool = Math.round(240 - t * 20);
         ctx.fillStyle = `rgba(${warm},${warm},${cool},${alpha})`;
-        ctx.fill();
+        // Draw with x-wrap so stars near N horizon appear on both edges
+        const xs = [s.x];
+        if (s.x < 40) xs.push(s.x + canvas.width);
+        if (s.x > canvas.width - 40) xs.push(s.x - canvas.width);
+        for (const sx of xs) {
+          ctx.beginPath();
+          ctx.arc(sx, s.y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // Кулдаун после взрыва
