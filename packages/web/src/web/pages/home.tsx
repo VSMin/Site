@@ -21,30 +21,34 @@ function ParticleCanvas() {
     resize();
     window.addEventListener("resize", resize);
 
-    const NUM = 60;
     const CONNECT_DIST = 140;
     const MAX_CONNECTIONS = 4;
     const CURSOR_CONNECT_DIST = 180;
     const ATTRACT_RADIUS = 160;
     const MAX_SPEED = 0.3;
-    const OVERLOAD_THRESHOLD = 35; // сколько частиц должно быть близко к курсору для взрыва
-    const OVERLOAD_RADIUS = 80;    // радиус "перегрузки"
+    const OVERLOAD_THRESHOLD = 35;
+    const OVERLOAD_RADIUS = 80;
+    const MIN_PARTICLES = 10;
+    const MAX_PARTICLES = 200;
 
     let lastFrameTime = 0;
     let hidden = false;
+
     // Цвета по кругу: красный → жёлтый → белый → голубой
-    const COLOR_CYCLE = [
-      [227, 30, 36],   // красный
-      [255, 200, 0],   // жёлтый
-      [255, 255, 255], // белый
-      [0, 180, 255],   // голубой
+    const COLOR_CYCLE: [number,number,number][] = [
+      [227, 30, 36],
+      [255, 200, 0],
+      [255, 255, 255],
+      [0, 180, 255],
     ];
-    let colorIdx = 0;
-    let currentColor = COLOR_CYCLE[0];
+    let nextColorIdx = 1; // следующий цвет после взрыва
+
     // Состояние взрыва
     let exploding = false;
-    let explodeFlash = 0;    // яркость вспышки 0..1
-    let explodeCooldown = 0; // кулдаун чтобы не триггерить повторно сразу
+    let explodeFlash = 0;
+    let explodeCooldown = 0;
+    let explodeColor: [number,number,number] = COLOR_CYCLE[0];
+
     const onVisibility = () => { hidden = document.hidden; };
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -54,11 +58,13 @@ function ParticleCanvas() {
       r: number; alpha: number;
       angle: number;
       angleSpeed: number;
+      color: [number,number,number];
     }
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
+    const defaultColor: [number,number,number] = [227, 30, 36];
 
-    const particles: Particle[] = Array.from({ length: NUM }, () => ({
+    const makeParticle = (): Particle => ({
       x: rand(0, canvas.width),
       y: rand(0, canvas.height),
       vx: rand(-0.15, 0.15),
@@ -67,26 +73,55 @@ function ParticleCanvas() {
       alpha: rand(0.35, 0.75),
       angle: rand(0, Math.PI * 2),
       angleSpeed: rand(-0.008, 0.008),
-    }));
+      color: defaultColor,
+    });
 
-    // Функция взрыва — частицы разлетаются от точки курсора
+    const particles: Particle[] = Array.from({ length: 60 }, makeParticle);
+
+    // Функция взрыва — меняет цвет только тем частицам, что были в радиусе сбора
     const triggerExplosion = () => {
       exploding = true;
       explodeFlash = 1.0;
-      explodeCooldown = 180; // ~3 секунды при 60fps
-      // Меняем цвет на следующий в цикле
-      colorIdx = (colorIdx + 1) % COLOR_CYCLE.length;
-      currentColor = COLOR_CYCLE[colorIdx];
+      explodeCooldown = 180;
+      const newColor = COLOR_CYCLE[nextColorIdx];
+      explodeColor = newColor;
+      nextColorIdx = (nextColorIdx + 1) % COLOR_CYCLE.length;
+
       for (const p of particles) {
         const dx = p.x - mouseX, dy = p.y - mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        // Меняем цвет только тем кто был внутри радиуса притяжения
+        if (dist < ATTRACT_RADIUS) {
+          p.color = newColor;
+        }
         const power = rand(4, 9);
         p.vx = (dx / dist) * power + rand(-1, 1);
         p.vy = (dy / dist) * power + rand(-1, 1);
-        // Сбиваем угол блуждания чтобы разлетелись хаотично
         p.angle = rand(0, Math.PI * 2);
       }
     };
+
+    // Колёсико мыши — добавить/убрать частицы (только средняя кнопка + scroll)
+    const onWheel = (e: WheelEvent) => {
+      if (e.buttons !== 4 && !e.ctrlKey) {
+        // Средняя кнопка зажата (buttons=4) ИЛИ просто колёсико на canvas
+        // Работаем на любой scroll пока мышь на canvas
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          // вверх — добавляем
+          if (particles.length < MAX_PARTICLES) {
+            for (let i = 0; i < 5; i++) particles.push(makeParticle());
+          }
+        } else {
+          // вниз — убираем
+          if (particles.length > MIN_PARTICLES) {
+            particles.splice(particles.length - 5, 5);
+          }
+        }
+      }
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    if (section) section.addEventListener("wheel", onWheel, { passive: false });
 
     const onMove = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -132,8 +167,7 @@ function ParticleCanvas() {
       // Затухание вспышки
       if (explodeFlash > 0) {
         explodeFlash = Math.max(0, explodeFlash - 0.04);
-        // Рисуем вспышку — радиальный градиент от точки курсора
-        const [cr, cg, cb] = currentColor;
+        const [cr, cg, cb] = explodeColor;
         const grd = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 300);
         grd.addColorStop(0, `rgba(${cr},${cg},${cb},${explodeFlash * 0.7})`);
         grd.addColorStop(0.4, `rgba(${cr},${cg},${cb},${explodeFlash * 0.15})`);
@@ -190,8 +224,8 @@ function ParticleCanvas() {
         if (p.y < -margin) p.y = canvas.height + margin;
         else if (p.y > canvas.height + margin) p.y = -margin;
 
-        // Draw particle
-        const [pr, pg, pb] = currentColor;
+        // Draw particle — индивидуальный цвет
+        const [pr, pg, pb] = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${pr},${pg},${pb},${p.alpha})`;
@@ -214,7 +248,10 @@ function ParticleCanvas() {
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
-            ctx.strokeStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},${t * t * 0.35})`;
+            const lr = (a.color[0] + b.color[0]) >> 1;
+            const lg = (a.color[1] + b.color[1]) >> 1;
+            const lb = (a.color[2] + b.color[2]) >> 1;
+            ctx.strokeStyle = `rgba(${lr},${lg},${lb},${t * t * 0.35})`;
             ctx.lineWidth = t * 1.2;
             ctx.stroke();
             connCount[i]++;
@@ -233,14 +270,14 @@ function ParticleCanvas() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(mouseX, mouseY);
-            ctx.strokeStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},${t * 0.75})`;
+            ctx.strokeStyle = `rgba(${p.color[0]},${p.color[1]},${p.color[2]},${t * 0.75})`;
             ctx.lineWidth = t * 1.8;
             ctx.stroke();
           }
         }
         ctx.beginPath();
         ctx.arc(mouseX, mouseY, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${currentColor[0]},${currentColor[1]},${currentColor[2]},0.9)`;
+        ctx.fillStyle = `rgba(${explodeColor[0]},${explodeColor[1]},${explodeColor[2]},0.9)`;
         ctx.fill();
       }
 
@@ -255,9 +292,11 @@ function ParticleCanvas() {
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("touchmove", onMove);
       canvas.removeEventListener("mouseleave", onLeave);
+      canvas.removeEventListener("wheel", onWheel);
       if (section) {
         section.removeEventListener("mousemove", onMove);
         section.removeEventListener("mouseleave", onLeave);
+        section.removeEventListener("wheel", onWheel);
       }
     };
   }, []);
