@@ -269,12 +269,21 @@ function gmst(jDate: number): number {
     + 0.000387933 * T * T) % 360;
 }
 
-/** Project a star (RA deg, Dec deg) to canvas [x, y] or null if below horizon.
- *  Uses equirectangular projection across the full canvas:
- *  azimuth 0-360 → x 0-W (N=left-quarter, E=center, S=right, W=right-quarter)
- *  altitude 0-90 → y H..0 (horizon=bottom, zenith=top)
+/**
+ * Возвращает дату со временем ~22:00 по местному (UTC+5) — ночное небо.
+ * Обновляется раз в сутки: берём текущую дату, но фиксируем час = 17:00 UTC (22:00 Уральск).
  */
-function starToCanvas(
+function nightDate(): Date {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 17, 0, 0));
+  return d;
+}
+
+/** Project a star/moon (RA deg, Dec deg) to canvas [x, y, altRad] or null if below horizon.
+ *  Equirectangular: az maps to x, alt maps to y.
+ *  Canvas fills sky from horizon (y=H) to zenith (y=0).
+ */
+function skyToCanvas(
   raDeg: number, decDeg: number,
   lstDeg: number,
   w: number, h: number
@@ -286,31 +295,74 @@ function starToCanvas(
   const sinAlt = Math.sin(decRad) * Math.sin(URALSK_LAT_RAD)
                + Math.cos(decRad) * Math.cos(URALSK_LAT_RAD) * Math.cos(haRad);
   const altRad = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
-  if (altRad < 0.02) return null; // below horizon
+  if (altRad < 0.01) return null; // below horizon
 
-  // Azimuth (N=0, E=90, S=180, W=270)
+  // Azimuth (N=0°, E=90°, S=180°, W=270°)
   const cosAlt = Math.cos(altRad);
   const cosAz = (Math.sin(decRad) - Math.sin(altRad) * Math.sin(URALSK_LAT_RAD))
                / (cosAlt * Math.cos(URALSK_LAT_RAD));
   const sinAz = -Math.cos(decRad) * Math.sin(haRad) / cosAlt;
-  let az = Math.atan2(sinAz, cosAz); // radians, N=0
+  let az = Math.atan2(sinAz, cosAz);
   if (az < 0) az += 2 * Math.PI;
 
-  // Stereographic (planisphere) projection — full sky on a rectangle.
-  // Zenith distance r = 0 at top-center, grows toward horizon.
-  // Azimuth maps around the center: N=top, S=bottom, E=right, W=left.
-  // We map the hemisphere onto the canvas rectangle:
-  //   zenith → top-center, N-horizon → top-edge, S-horizon → bottom-center
-  // Scale: horizon (alt=0) maps to radius R from canvas center.
-  const zenith = Math.PI / 2 - altRad; // 0 at zenith, π/2 at horizon
-  // Use orthographic (sin) for more natural star density near horizon
-  const R = Math.min(w * 0.55, h * 0.9);
-  const r = (zenith / (Math.PI / 2)) * R;
-  // az: N=0 up, E=π/2 right, S=π down, W=3π/2 left
-  const cx = w / 2 + r * Math.sin(az);
-  const cy = h * 0.42 - r * Math.cos(az); // center slightly above canvas middle
+  // Equirectangular: N=left, S=right, zenith=top, horizon=bottom
+  // az: 0(N)→left-quarter, π/2(E)→center, π(S)→right-quarter, 3π/2(W)→right-edge/wrap
+  // Rotate so South is center (most stars visible from lat 51N are in S sky)
+  // S(π) → x = w/2, N(0/2π) → x = 0 or w
+  const azNorm = az / (2 * Math.PI); // 0..1, N=0, E=0.25, S=0.5, W=0.75
+  // Shift so S=0.5 is center
+  const x = ((azNorm + 0.5) % 1) * w;
+  // altitude: 0° → y=h, 90° → y=0
+  const y = h - (altRad / (Math.PI / 2)) * h;
 
-  return [cx, cy, altRad];
+  return [x, y, altRad];
+}
+
+/** Фаза Луны: 0=новолуние, 0.5=полнолуние, 1=новолуние */
+function moonPhase(date: Date): number {
+  const jDate = jd(date);
+  // Известное новолуние: JD 2451550.1 (6 января 2000)
+  const synodicPeriod = 29.530588853;
+  return ((jDate - 2451550.1) % synodicPeriod + synodicPeriod) % synodicPeriod / synodicPeriod;
+}
+
+/** Приблизительные экваториальные координаты Луны (RA°, Dec°) */
+function moonRaDec(date: Date): [number, number] {
+  const jDate = jd(date);
+  const T = (jDate - 2451545.0) / 36525;
+  // Упрощённая теория Луны (точность ~1°)
+  const L = (218.3164477 + 481267.88123421 * T) % 360;
+  const M = (357.5291092 + 35999.0502909 * T) * Math.PI / 180;
+  const Mm = (134.9633964 + 477198.8675055 * T) * Math.PI / 180;
+  const D = (297.8501921 + 445267.1114034 * T) * Math.PI / 180;
+  const F = (93.2720950 + 483202.0175233 * T) * Math.PI / 180;
+
+  const lon = L
+    + 6.289 * Math.sin(Mm)
+    - 1.274 * Math.sin(2 * D - Mm)
+    + 0.658 * Math.sin(2 * D)
+    - 0.214 * Math.sin(2 * Mm)
+    - 0.186 * Math.sin(M)
+    - 0.114 * Math.sin(2 * F);
+  const lat = 5.128 * Math.sin(F)
+    + 0.280 * Math.sin(Mm + F)
+    + 0.277 * Math.sin(Mm - F)
+    + 0.173 * Math.sin(2 * D - F)
+    + 0.055 * Math.sin(2 * D - Mm + F);
+
+  // Ecliptic → Equatorial
+  const eps = (23.439291111 - 0.013004167 * T) * Math.PI / 180;
+  const lonRad = lon * Math.PI / 180;
+  const latRad = lat * Math.PI / 180;
+  const ra = Math.atan2(
+    Math.sin(lonRad) * Math.cos(eps) - Math.tan(latRad) * Math.sin(eps),
+    Math.cos(lonRad)
+  ) * 180 / Math.PI;
+  const dec = Math.asin(
+    Math.sin(latRad) * Math.cos(eps) + Math.cos(latRad) * Math.sin(eps) * Math.sin(lonRad)
+  ) * 180 / Math.PI;
+
+  return [(ra + 360) % 360, dec];
 }
 
 // ── Particle Network Canvas ────────────────────────────────────────────────────
@@ -323,12 +375,12 @@ function ParticleCanvas() {
     const ctx = canvas.getContext("2d")!;
     let animId: number;
     let mouseX = -9999, mouseY = -9999;
-    let lastStarUpdate = 0;
+    let _unused = 0; void _unused;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
-      lastStarUpdate = 0; // force star recompute on resize
+      lastStarDay = -1; // force star recompute on resize
     };
     resize();
     window.addEventListener("resize", resize);
@@ -390,26 +442,32 @@ function ParticleCanvas() {
 
     const particles: Particle[] = Array.from({ length: 60 }, makeParticle);
 
-    // ── Real star positions (recomputed once per minute) ──────────────────────
+    // ── Real star + moon positions (recomputed once per day, fixed at 22:00 local) ──
     interface StarScreen { x: number; y: number; mag: number; }
+    interface MoonScreen { x: number; y: number; phase: number; } // phase 0..1
     let starPositions: StarScreen[] = [];
+    let moonPos: MoonScreen | null = null;
+    let lastStarDay = -1; // UTC day number of last compute
 
     const updateStars = () => {
-      const now = new Date();
-      const jDate = jd(now);
+      const night = nightDate(); // сегодня 22:00 Уральск = 17:00 UTC
+      const jDate = jd(night);
       const lstDeg = (gmst(jDate) + URALSK_LON_DEG + 360) % 360;
       starPositions = [];
       const seen = new Set<string>();
       for (const [raH, decDeg, mag] of STARS) {
-        const raDeg = raH * 15; // hours → degrees
+        const raDeg = raH * 15;
         const key = `${raH.toFixed(3)},${decDeg.toFixed(3)}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        const pos = starToCanvas(raDeg, decDeg, lstDeg, canvas.width, canvas.height);
-        if (pos) {
-          starPositions.push({ x: pos[0], y: pos[1], mag });
-        }
+        const pos = skyToCanvas(raDeg, decDeg, lstDeg, canvas.width, canvas.height);
+        if (pos) starPositions.push({ x: pos[0], y: pos[1], mag });
       }
+      // Луна
+      const [mRa, mDec] = moonRaDec(night);
+      const mPos = skyToCanvas(mRa, mDec, lstDeg, canvas.width, canvas.height);
+      moonPos = mPos ? { x: mPos[0], y: mPos[1], phase: moonPhase(night) } : null;
+      lastStarDay = night.getUTCDate();
     };
 
     updateStars();
@@ -478,29 +536,81 @@ function ParticleCanvas() {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ── Draw real stars (update every 60s) ───────────────────────────────────
-      if (now - lastStarUpdate > 60000) {
+      // ── Draw real stars + moon (update once per day) ─────────────────────────
+      const tonight = nightDate();
+      if (tonight.getUTCDate() !== lastStarDay) {
         updateStars();
-        lastStarUpdate = now;
       }
       for (const s of starPositions) {
-        // mag range roughly -1.5 to 4.5 → radius 1.8..0.4, alpha 0.6..0.12
+        // mag range roughly -1.5 to 4.5 → radius 2.2..0.5, alpha 0.75..0.18
         const t = Math.max(0, Math.min(1, (s.mag + 1.5) / 6));
-        const r = 1.8 - t * 1.4;
-        const alpha = 0.6 - t * 0.48;
-        // Bright stars slightly blue-white, dim ones warm
-        const warm = Math.round(215 + t * 35);
-        const cool = Math.round(240 - t * 20);
+        const r = 2.2 - t * 1.7;
+        const alpha = 0.75 - t * 0.57;
+        // Bright stars blue-white, dim ones warm yellow
+        const warm = Math.round(210 + t * 40);
+        const cool = Math.round(245 - t * 25);
         ctx.fillStyle = `rgba(${warm},${warm},${cool},${alpha})`;
-        // Draw with x-wrap so stars near N horizon appear on both edges
+        // x-wrap: stars near edges (equirectangular seam) duplicate
         const xs = [s.x];
-        if (s.x < 40) xs.push(s.x + canvas.width);
-        if (s.x > canvas.width - 40) xs.push(s.x - canvas.width);
+        if (s.x < 50) xs.push(s.x + canvas.width);
+        if (s.x > canvas.width - 50) xs.push(s.x - canvas.width);
         for (const sx of xs) {
           ctx.beginPath();
           ctx.arc(sx, s.y, r, 0, Math.PI * 2);
           ctx.fill();
         }
+      }
+      // ── Draw Moon ────────────────────────────────────────────────────────────
+      if (moonPos) {
+        const { x: mx, y: my, phase } = moonPos;
+        const moonR = 14;
+        // Glow
+        const glow = ctx.createRadialGradient(mx, my, moonR * 0.5, mx, my, moonR * 3);
+        glow.addColorStop(0, "rgba(220,220,180,0.25)");
+        glow.addColorStop(1, "rgba(220,220,180,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(mx, my, moonR * 3, 0, Math.PI * 2);
+        ctx.fill();
+        // Moon disc — lit side based on phase
+        // phase 0=new(dark), 0.5=full(bright), 1=new
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+        ctx.clip();
+        // Full disc (lit)
+        ctx.fillStyle = "rgba(230,225,195,0.92)";
+        ctx.fillRect(mx - moonR, my - moonR, moonR * 2, moonR * 2);
+        // Shadow ellipse to simulate phase
+        // phase<0.5: waxing (lit right), phase>0.5: waning (lit left)
+        const illum = phase < 0.5 ? phase * 2 : (1 - phase) * 2; // 0..1
+        // Shadow covers (1-illum) fraction
+        const shadowW = moonR * (1 - illum * 2 + (phase < 0.5 ? 0 : 0));
+        ctx.fillStyle = "rgba(8,8,18,0.9)";
+        if (phase < 0.25 || phase > 0.75) {
+          // Mostly dark — draw large shadow
+          const ew = moonR * Math.abs(Math.cos(phase * 2 * Math.PI));
+          ctx.beginPath();
+          ctx.ellipse(mx + (phase < 0.5 ? -1 : 1) * 0, my, ew || 0.5, moonR, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Cover half
+          ctx.fillRect(phase < 0.5 ? mx - moonR : mx, my - moonR, moonR, moonR * 2);
+        } else {
+          // Mostly lit — small shadow sliver
+          const ew = moonR * Math.abs(Math.cos(phase * 2 * Math.PI));
+          ctx.fillRect(phase < 0.5 ? mx - moonR : mx, my - moonR, moonR, moonR * 2);
+          ctx.fillStyle = "rgba(230,225,195,0.92)";
+          ctx.beginPath();
+          ctx.ellipse(mx, my, ew || 0.5, moonR, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        // Thin border
+        ctx.beginPath();
+        ctx.arc(mx, my, moonR, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(200,200,160,0.4)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
       }
 
       // Кулдаун после взрыва
@@ -691,7 +801,7 @@ export default function HomePage() {
     <PageLayout>
       <SEO
         title="IT-услуги и телекоммуникации в Уральске"
-        description="KONNEKTEAM — интернет для бизнеса, видеонаблюдение, информационная безопасность в Уральске. Выезд специалиста за 2–4 часа. 15 лет опыта, 500+ проектов."
+        description="KONNEKTEAM — интернет для бизнеса, видеонаблюдение, информационная безопасность в Уральске. Выезд специалиста за 2–4 часа. Работаем с 2010 года, 350+ проектов."
         keywords="IT услуги Уральск, интернет для бизнеса Уральск, видеонаблюдение Уральск, информационная безопасность Уральск, телекоммуникации Уральск, KONNEKTEAM"
         canonical="https://konnekteam.kz/"
       />
@@ -736,8 +846,8 @@ export default function HomePage() {
       <section style={{ background: "#111", padding: "60px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, textAlign: "center" }}>
           {[
-            { num: "10+", label: "лет на рынке" },
-            { num: "500+", label: "завершённых проектов" },
+            { num: "15+", label: "лет на рынке" },
+            { num: "350+", label: "завершённых проектов" },
             { num: "2–4ч", label: "время выезда" },
             { num: "24/7", label: "техподдержка" },
           ].map(s => (
@@ -793,7 +903,7 @@ export default function HomePage() {
               { icon: "⚡", title: "Быстрый выезд", desc: "Специалист приедет в течение 2–4 часов по Уральску" },
               { icon: "🛡️", title: "Гарантия качества", desc: "На все работы — гарантия от 6 до 24 месяцев" },
               { icon: "🔧", title: "Полный цикл", desc: "Проектирование, монтаж, настройка и дальнейшее сопровождение" },
-              { icon: "💼", title: "Опыт 10+ лет", desc: "Реализовали более 500 проектов разного масштаба" },
+              { icon: "💼", title: "Опыт с 2010 года", desc: "Реализовали более 350 проектов разного масштаба" },
               { icon: "📞", title: "Техподдержка 24/7", desc: "Всегда на связи — звонок, WhatsApp или удалённое подключение" },
               { icon: "📋", title: "Договор и отчёты", desc: "Официальный договор, акты выполненных работ, гарантийные талоны" },
             ].map(w => (
