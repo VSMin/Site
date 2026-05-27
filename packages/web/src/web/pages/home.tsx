@@ -405,9 +405,6 @@ function ParticleCanvas() {
         }
       }
     };
-    canvas.addEventListener("wheel", onWheel, { passive: false });
-    if (section) section.addEventListener("wheel", onWheel, { passive: false });
-
     const onMove = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
       const src = "touches" in e ? e.touches[0] : e;
@@ -420,9 +417,11 @@ function ParticleCanvas() {
     canvas.addEventListener("mouseleave", onLeave);
     // Also track on the parent section so hero text doesn't block events
     const section = canvas.parentElement;
+    canvas.addEventListener("wheel", onWheel, { passive: false });
     if (section) {
       section.addEventListener("mousemove", onMove);
       section.addEventListener("mouseleave", onLeave);
+      section.addEventListener("wheel", onWheel, { passive: false });
     }
 
     const draw = (now: number) => {
