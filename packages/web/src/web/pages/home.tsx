@@ -375,7 +375,7 @@ function ParticleCanvas() {
     const ctx = canvas.getContext("2d")!;
     let animId: number;
     let mouseX = -9999, mouseY = -9999;
-    let _unused = 0; void _unused;
+    let lastStarDay = -1; // UTC day number of last star compute
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -447,7 +447,6 @@ function ParticleCanvas() {
     interface MoonScreen { x: number; y: number; phase: number; } // phase 0..1
     let starPositions: StarScreen[] = [];
     let moonPos: MoonScreen | null = null;
-    let lastStarDay = -1; // UTC day number of last compute
 
     const updateStars = () => {
       const night = nightDate(); // сегодня 22:00 Уральск = 17:00 UTC
