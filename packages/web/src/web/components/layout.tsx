@@ -369,7 +369,7 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {[
-        { k: "name", label: "Имя *", placeholder: "Иван Омаров", type: "text", req: true },
+        { k: "name", label: "Имя *", placeholder: "Иван Иванов", type: "text", req: true },
         { k: "phone", label: "Телефон *", placeholder: "+7 700 000 00 00", type: "tel", req: true },
         { k: "company", label: "Компания", placeholder: 'ТОО "Ваша компания"', type: "text", req: false },
       ].map((f) => (
