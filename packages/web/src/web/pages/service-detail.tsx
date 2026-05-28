@@ -93,6 +93,30 @@ export default function ServiceDetailPage() {
         </section>
       )}
 
+      {/* Speedtest block — only for internet service */}
+      {service.slug === "internet" && (
+        <section style={{ padding: "80px 24px", background: "#0A0A0A" }}>
+          <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
+            <h2 style={{ fontSize: "1.8rem", fontWeight: 800, marginBottom: 12 }}>Проверьте скорость подключения</h2>
+            <p style={{ color: "rgba(255,255,255,0.5)", marginBottom: 8 }}>
+              Тест подключается напрямую к нашему серверу — вы видите реальную скорость именно вашего соединения с нашей сетью.
+            </p>
+            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.85rem", marginBottom: 32 }}>
+              Актуально для клиентов KONNEKTEAM, подключённых к нашей сети.
+            </p>
+            <a
+              href="https://speedtest.konnekteam.kz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-primary"
+              style={{ textDecoration: "none", display: "inline-block", fontSize: "1rem" }}
+            >
+              Запустить тест скорости →
+            </a>
+          </div>
+        </section>
+      )}
+
       {/* Contact Form */}
       <section style={{ padding: "80px 24px", background: "#0A0A0A" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
