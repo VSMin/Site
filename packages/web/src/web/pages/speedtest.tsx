@@ -4,112 +4,119 @@ import { ParticleCanvas } from "../components/particle-canvas";
 type Status = "loading" | "client" | "guest";
 type Phase = "idle" | "ping" | "download" | "upload" | "done";
 
-// ── Circular speedometer (like real speedtest) ────────────────────────────────
+// ── Circular speedometer — Canvas based, no SVG arc bugs ─────────────────────
 function Ring({
   value, max, label, unit, color, size = 220,
 }: {
   value: number; max: number; label: string; unit: string; color: string; size?: number;
 }) {
-  const r = size * 0.42;
-  const cx = size / 2, cy = size / 2;
-  const strokeW = size * 0.055;
-  // Arc from -210deg to +30deg = 240deg total sweep
-  const SWEEP = 240;
-  const START = -210; // degrees
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const pct = Math.min(1, value / max);
-  const filled = pct * SWEEP;
 
-  const polarToXY = (angleDeg: number, radius: number) => {
-    const rad = (angleDeg * Math.PI) / 180;
-    return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-  };
+  // Canvas arc angles: 0 = right (3 o'clock), clockwise
+  // We want start at ~210° left-bottom, sweep 240° clockwise → end at ~30°
+  // In canvas radians: start = 150° = 5π/6, end = 150° + 240° = 390° = 13π/6
+  const DEG = Math.PI / 180;
+  const START_RAD = 150 * DEG;   // lower-left
+  const SWEEP_RAD = 240 * DEG;   // 240° sweep
+  const END_RAD   = START_RAD + SWEEP_RAD;
 
-  // Строим дугу как polyline из N точек — никакого large-arc бага
-  const buildArcPoints = (startDeg: number, sweepDeg: number, rx: number, steps = 120) => {
-    const pts: string[] = [];
-    for (let i = 0; i <= steps; i++) {
-      const angle = startDeg + (sweepDeg * i) / steps;
-      const p = polarToXY(angle, rx);
-      pts.push(`${p.x},${p.y}`);
+  const cx = size / 2, cy = size / 2;
+  const r  = size * 0.42;
+  const sw = size * 0.055; // stroke width
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width  = `${size}px`;
+    canvas.style.height = `${size}px`;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, size, size);
+
+    // ── Track ──
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, START_RAD, END_RAD, false);
+    ctx.strokeStyle = "rgba(255,255,255,0.09)";
+    ctx.lineWidth   = sw;
+    ctx.lineCap     = "round";
+    ctx.stroke();
+
+    // ── Fill arc ──
+    if (pct > 0) {
+      const fillEnd = START_RAD + pct * SWEEP_RAD;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, START_RAD, fillEnd, false);
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = sw;
+      ctx.lineCap     = "round";
+      ctx.shadowColor = color;
+      ctx.shadowBlur  = 18;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
-    return pts.join(" ");
-  };
 
-  // Points for track and fill polylines
-  const trackPoints = buildArcPoints(START, SWEEP, r, 120);
-  const fillSteps = Math.max(2, Math.round(pct * 120));
-  const fillPoints = buildArcPoints(START, filled, r, fillSteps);
+    // ── Tick marks ──
+    for (let i = 0; i <= 8; i++) {
+      const angle = START_RAD + (i / 8) * SWEEP_RAD;
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const inner = r - sw * 0.85;
+      const outer = r - sw * 0.05;
+      ctx.beginPath();
+      ctx.moveTo(cx + cos * inner, cy + sin * inner);
+      ctx.lineTo(cx + cos * outer, cy + sin * outer);
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth   = i % 4 === 0 ? 2 : 1;
+      ctx.lineCap     = "butt";
+      ctx.shadowBlur  = 0;
+      ctx.stroke();
+    }
 
-  // Needle position
-  const needleAngle = START + filled;
-  const needleTip = polarToXY(needleAngle, r * 0.82);
+    // ── Needle ──
+    const needleAngle = START_RAD + pct * SWEEP_RAD;
+    const nLen = r * 0.82;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(needleAngle) * nLen, cy + Math.sin(needleAngle) * nLen);
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = "round";
+    ctx.shadowColor = "rgba(255,255,255,0.8)";
+    ctx.shadowBlur  = 8;
+    ctx.stroke();
+
+    // ── Base dot (red) ──
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fillStyle   = "#cc0000";
+    ctx.shadowColor = "#cc0000";
+    ctx.shadowBlur  = 12;
+    ctx.fill();
+
+    // ── Center dot (white) ──
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle  = "#ffffff";
+    ctx.shadowBlur = 0;
+    ctx.fill();
+
+  }, [value, color, size]);
 
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      <svg width={size} height={size} style={{ overflow: "visible" }}>
-        {/* Track */}
-        <polyline
-          points={trackPoints}
-          fill="none"
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth={strokeW}
-          strokeLinecap="butt"
-          strokeLinejoin="round"
-        />
-        {/* Fill — те же точки, только до текущего угла */}
-        {pct > 0 && (
-          <polyline
-            points={fillPoints}
-            fill="none"
-            stroke={color}
-            strokeWidth={strokeW}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color})`,
-            }}
-          />
-        )}
-        {/* Tick marks — on top of arcs */}
-        {Array.from({ length: 9 }, (_, i) => {
-          const a = START + (i / 8) * SWEEP;
-          const inner = polarToXY(a, r - strokeW * 0.9);
-          const outer = polarToXY(a, r - strokeW * 0.1);
-          return (
-            <line
-              key={i}
-              x1={inner.x} y1={inner.y}
-              x2={outer.x} y2={outer.y}
-              stroke="rgba(255,255,255,0.25)"
-              strokeWidth={i % 4 === 0 ? 2 : 1}
-            />
-          );
-        })}
-        {/* Needle line */}
-        <line
-          x1={cx} y1={cy}
-          x2={needleTip.x} y2={needleTip.y}
-          stroke="#ffffff"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          style={{
-            filter: "drop-shadow(0 0 5px rgba(255,255,255,0.9))",
-            transition: "x2 0.05s linear, y2 0.05s linear",
-          }}
-        />
-        {/* Red base dot */}
-        <circle cx={cx} cy={cy} r={8} fill="#cc0000"
-          style={{ filter: "drop-shadow(0 0 8px #cc0000)" }} />
-        {/* White center dot */}
-        <circle cx={cx} cy={cy} r={4} fill="#ffffff" />
-      </svg>
+      <canvas ref={canvasRef} style={{ display: "block" }} />
 
-      {/* Center value */}
+      {/* Center value overlay */}
       <div style={{
         position: "absolute", inset: 0,
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         paddingTop: size * 0.08,
+        pointerEvents: "none",
       }}>
         <div style={{
           fontSize: size * 0.22,
