@@ -24,15 +24,18 @@ function Ring({
     return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
   };
 
-  const describeArc = (startDeg: number, endDeg: number, rx: number) => {
+  // sweep — сколько градусов проходим (всегда положительное число)
+  const describeArc = (startDeg: number, sweepDeg: number, rx: number) => {
+    const endDeg = startDeg + sweepDeg;
     const s = polarToXY(startDeg, rx);
     const e = polarToXY(endDeg, rx);
-    const large = endDeg - startDeg > 180 ? 1 : 0;
+    // large-arc-flag: 1 если sweep > 180°
+    const large = sweepDeg > 180 ? 1 : 0;
     return `M ${s.x} ${s.y} A ${rx} ${rx} 0 ${large} 1 ${e.x} ${e.y}`;
   };
 
   // Full arc path for track
-  const fullArcPath = describeArc(START, START + SWEEP, r);
+  const fullArcPath = describeArc(START, SWEEP, r);
 
   // Needle position
   const needleAngle = START + filled;
@@ -52,7 +55,7 @@ function Ring({
         {/* Fill arc — clipPath обрезает полную дугу до нужной длины */}
         {pct > 0 && (
           <path
-            d={describeArc(START, START + filled, r)}
+            d={describeArc(START, filled, r)}
             fill="none"
             stroke={color}
             strokeWidth={strokeW}
