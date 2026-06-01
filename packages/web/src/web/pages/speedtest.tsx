@@ -24,18 +24,21 @@ function Ring({
     return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
   };
 
-  // sweep — сколько градусов проходим (всегда положительное число)
-  const describeArc = (startDeg: number, sweepDeg: number, rx: number) => {
-    const endDeg = startDeg + sweepDeg;
-    const s = polarToXY(startDeg, rx);
-    const e = polarToXY(endDeg, rx);
-    // large-arc-flag: 1 если sweep > 180°
-    const large = sweepDeg > 180 ? 1 : 0;
-    return `M ${s.x} ${s.y} A ${rx} ${rx} 0 ${large} 1 ${e.x} ${e.y}`;
+  // Строим дугу как polyline из N точек — никакого large-arc бага
+  const buildArcPoints = (startDeg: number, sweepDeg: number, rx: number, steps = 120) => {
+    const pts: string[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const angle = startDeg + (sweepDeg * i) / steps;
+      const p = polarToXY(angle, rx);
+      pts.push(`${p.x},${p.y}`);
+    }
+    return pts.join(" ");
   };
 
-  // Full arc path for track
-  const fullArcPath = describeArc(START, SWEEP, r);
+  // Points for track and fill polylines
+  const trackPoints = buildArcPoints(START, SWEEP, r, 120);
+  const fillSteps = Math.max(2, Math.round(pct * 120));
+  const fillPoints = buildArcPoints(START, filled, r, fillSteps);
 
   // Needle position
   const needleAngle = START + filled;
@@ -44,22 +47,24 @@ function Ring({
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ overflow: "visible" }}>
-        {/* Track — same path, butt caps so fill sits exactly on top */}
-        <path
-          d={fullArcPath}
+        {/* Track */}
+        <polyline
+          points={trackPoints}
           fill="none"
           stroke="rgba(255,255,255,0.08)"
           strokeWidth={strokeW}
           strokeLinecap="butt"
+          strokeLinejoin="round"
         />
-        {/* Fill arc — clipPath обрезает полную дугу до нужной длины */}
+        {/* Fill — те же точки, только до текущего угла */}
         {pct > 0 && (
-          <path
-            d={describeArc(START, filled, r)}
+          <polyline
+            points={fillPoints}
             fill="none"
             stroke={color}
             strokeWidth={strokeW}
-            strokeLinecap="butt"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             style={{
               filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color})`,
             }}
