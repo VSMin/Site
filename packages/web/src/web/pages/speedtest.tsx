@@ -31,12 +31,8 @@ function Ring({
     return `M ${s.x} ${s.y} A ${rx} ${rx} 0 ${large} 1 ${e.x} ${e.y}`;
   };
 
-  // Full arc path (used for both track and fill)
+  // Full arc path for track
   const fullArcPath = describeArc(START, START + SWEEP, r);
-  // Arc length: (SWEEP/360) * 2πr
-  const totalArcLen = (SWEEP / 360) * 2 * Math.PI * r;
-  // dashoffset trick: offset = total - filled → filled portion "draws" from start
-  const dashOffset = totalArcLen - pct * totalArcLen;
 
   // Needle position
   const needleAngle = START + filled;
@@ -53,20 +49,19 @@ function Ring({
           strokeWidth={strokeW}
           strokeLinecap="butt"
         />
-        {/* Fill arc — same path, dashoffset controls how much is visible */}
-        <path
-          d={fullArcPath}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeW}
-          strokeLinecap="butt"
-          strokeDasharray={totalArcLen}
-          strokeDashoffset={dashOffset}
-          style={{
-            filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color})`,
-            transition: "stroke-dashoffset 0.05s linear, stroke 0.3s ease",
-          }}
-        />
+        {/* Fill arc — clipPath обрезает полную дугу до нужной длины */}
+        {pct > 0 && (
+          <path
+            d={describeArc(START, START + filled, r)}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeW}
+            strokeLinecap="butt"
+            style={{
+              filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color})`,
+            }}
+          />
+        )}
         {/* Tick marks — on top of arcs */}
         {Array.from({ length: 9 }, (_, i) => {
           const a = START + (i / 8) * SWEEP;
