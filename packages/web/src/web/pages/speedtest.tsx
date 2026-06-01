@@ -31,11 +31,12 @@ function Ring({
     return `M ${s.x} ${s.y} A ${rx} ${rx} 0 ${large} 1 ${e.x} ${e.y}`;
   };
 
-  // Total arc length of the full track (for dasharray trick)
+  // Full arc path (used for both track and fill)
   const fullArcPath = describeArc(START, START + SWEEP, r);
-  // We calculate arc length via approximation: (SWEEP/360) * 2πr
+  // Arc length: (SWEEP/360) * 2πr
   const totalArcLen = (SWEEP / 360) * 2 * Math.PI * r;
-  const filledLen = pct * totalArcLen;
+  // dashoffset trick: offset = total - filled → filled portion "draws" from start
+  const dashOffset = totalArcLen - pct * totalArcLen;
 
   // Needle position
   const needleAngle = START + filled;
@@ -44,15 +45,29 @@ function Ring({
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ overflow: "visible" }}>
-        {/* Track (full arc, dim) */}
+        {/* Track — same path, butt caps so fill sits exactly on top */}
         <path
           d={fullArcPath}
           fill="none"
-          stroke="rgba(255,255,255,0.07)"
+          stroke="rgba(255,255,255,0.08)"
           strokeWidth={strokeW}
-          strokeLinecap="round"
+          strokeLinecap="butt"
         />
-        {/* Tick marks */}
+        {/* Fill arc — same path, dashoffset controls how much is visible */}
+        <path
+          d={fullArcPath}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeW}
+          strokeLinecap="butt"
+          strokeDasharray={totalArcLen}
+          strokeDashoffset={dashOffset}
+          style={{
+            filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 22px ${color})`,
+            transition: "stroke-dashoffset 0.05s linear, stroke 0.3s ease",
+          }}
+        />
+        {/* Tick marks — on top of arcs */}
         {Array.from({ length: 9 }, (_, i) => {
           const a = START + (i / 8) * SWEEP;
           const inner = polarToXY(a, r - strokeW * 0.9);
@@ -62,25 +77,11 @@ function Ring({
               key={i}
               x1={inner.x} y1={inner.y}
               x2={outer.x} y2={outer.y}
-              stroke="rgba(255,255,255,0.2)"
+              stroke="rgba(255,255,255,0.25)"
               strokeWidth={i % 4 === 0 ? 2 : 1}
             />
           );
         })}
-        {/* Fill arc — dasharray trick so CSS transition works on the fill length */}
-        <path
-          d={fullArcPath}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeW}
-          strokeLinecap="round"
-          strokeDasharray={`${filledLen} ${totalArcLen}`}
-          strokeDashoffset={0}
-          style={{
-            filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 20px ${color})`,
-            transition: "stroke-dasharray 0.05s linear, stroke 0.3s ease, filter 0.3s ease",
-          }}
-        />
         {/* Needle line */}
         <line
           x1={cx} y1={cy}
