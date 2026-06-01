@@ -174,7 +174,7 @@ function GuestView() {
       v += 1.2;
       if (v >= 87) { clearInterval(id); return; }
       setNeedle(v);
-      setFakeSpeed(Math.round(v * 10.5));
+      setFakeSpeed(Math.round(v * 3.45));
     }, 18);
     return () => clearInterval(id);
   }, []);
@@ -218,7 +218,7 @@ function GuestView() {
       {/* stats row */}
       <div style={{ display: "flex", gap: 32, marginBottom: 44, flexWrap: "wrap", justifyContent: "center" }}>
         {[
-          { v: "до 1 Гбит/с", l: "скорость" },
+          { v: "до 300 Мбит/с", l: "скорость" },
           { v: "< 5 мс", l: "задержка" },
           { v: "99.9%", l: "uptime" },
         ].map(s => (
