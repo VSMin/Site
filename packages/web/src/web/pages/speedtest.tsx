@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ParticleCanvas } from "../components/particle-canvas";
 
 type Status = "loading" | "client" | "guest";
@@ -25,16 +25,24 @@ function Ring({
   const r  = size * 0.42;
   const sw = size * 0.055; // stroke width
 
-  useEffect(() => {
+  // ── Init: set canvas size + DPR scale — runs sync before paint ───────────
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
     const dpr = window.devicePixelRatio || 1;
     canvas.width  = size * dpr;
     canvas.height = size * dpr;
     canvas.style.width  = `${size}px`;
     canvas.style.height = `${size}px`;
+    const ctx = canvas.getContext("2d")!;
     ctx.scale(dpr, dpr);
+  }, [size]); // re-init only if size changes
+
+  // ── Draw: redraw on value/color change (no canvas resize!) ────────────────
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
 
     ctx.clearRect(0, 0, size, size);
 
@@ -104,7 +112,7 @@ function Ring({
     ctx.shadowBlur = 0;
     ctx.fill();
 
-  }, [value, color, size]);
+  }, [value, color, size, pct]);
 
   return (
     <div style={{ position: "relative", width: size, height: size }}>
