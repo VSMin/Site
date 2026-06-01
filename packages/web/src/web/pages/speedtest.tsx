@@ -13,7 +13,6 @@ function Ring({
   const r = size * 0.42;
   const cx = size / 2, cy = size / 2;
   const strokeW = size * 0.055;
-  const circumference = 2 * Math.PI * r;
   // Arc from -210deg to +30deg = 240deg total sweep
   const SWEEP = 240;
   const START = -210; // degrees
@@ -32,12 +31,22 @@ function Ring({
     return `M ${s.x} ${s.y} A ${rx} ${rx} 0 ${large} 1 ${e.x} ${e.y}`;
   };
 
+  // Total arc length of the full track (for dasharray trick)
+  const fullArcPath = describeArc(START, START + SWEEP, r);
+  // We calculate arc length via approximation: (SWEEP/360) * 2πr
+  const totalArcLen = (SWEEP / 360) * 2 * Math.PI * r;
+  const filledLen = pct * totalArcLen;
+
+  // Needle position
+  const needleAngle = START + filled;
+  const needleTip = polarToXY(needleAngle, r * 0.82);
+
   return (
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} style={{ overflow: "visible" }}>
-        {/* Track */}
+        {/* Track (full arc, dim) */}
         <path
-          d={describeArc(START, START + SWEEP, r)}
+          d={fullArcPath}
           fill="none"
           stroke="rgba(255,255,255,0.07)"
           strokeWidth={strokeW}
@@ -58,40 +67,37 @@ function Ring({
             />
           );
         })}
-        {/* Fill */}
-        {pct > 0 && (
-          <path
-            d={describeArc(START, START + filled, r)}
-            fill="none"
-            stroke={color}
-            strokeWidth={strokeW}
-            strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 12px ${color}) drop-shadow(0 0 20px ${color})`, transition: "all 0.05s linear" }}
-          />
-        )}
-        {/* Needle — real pointer from center */}
-        {(() => {
-          const needleAngle = START + filled;
-          const needleTip = polarToXY(needleAngle, r * 0.82);
-          return (
-            <>
-              {/* Needle line */}
-              <line
-                x1={cx} y1={cy}
-                x2={needleTip.x} y2={needleTip.y}
-                stroke="#ffffff"
-                strokeWidth={2}
-                strokeLinecap="round"
-                style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))", transition: "all 0.05s linear" }}
-              />
-              {/* Red dot at base */}
-              <circle cx={cx} cy={cy} r={7} fill="#cc0000"
-                style={{ filter: "drop-shadow(0 0 6px #cc0000)" }} />
-              {/* White dot at center */}
-              <circle cx={cx} cy={cy} r={3} fill="#ffffff" />
-            </>
-          );
-        })()}
+        {/* Fill arc — dasharray trick so CSS transition works on the fill length */}
+        <path
+          d={fullArcPath}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeW}
+          strokeLinecap="round"
+          strokeDasharray={`${filledLen} ${totalArcLen}`}
+          strokeDashoffset={0}
+          style={{
+            filter: `drop-shadow(0 0 10px ${color}) drop-shadow(0 0 20px ${color})`,
+            transition: "stroke-dasharray 0.05s linear, stroke 0.3s ease, filter 0.3s ease",
+          }}
+        />
+        {/* Needle line */}
+        <line
+          x1={cx} y1={cy}
+          x2={needleTip.x} y2={needleTip.y}
+          stroke="#ffffff"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          style={{
+            filter: "drop-shadow(0 0 5px rgba(255,255,255,0.9))",
+            transition: "x2 0.05s linear, y2 0.05s linear",
+          }}
+        />
+        {/* Red base dot */}
+        <circle cx={cx} cy={cy} r={8} fill="#cc0000"
+          style={{ filter: "drop-shadow(0 0 8px #cc0000)" }} />
+        {/* White center dot */}
+        <circle cx={cx} cy={cy} r={4} fill="#ffffff" />
       </svg>
 
       {/* Center value */}
