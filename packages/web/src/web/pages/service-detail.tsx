@@ -105,9 +105,7 @@ export default function ServiceDetailPage() {
               Актуально для клиентов KONNEKTEAM, подключённых к нашей сети.
             </p>
             <a
-              href="https://speedtest.konnekteam.kz/"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/speedtest"
               className="btn-primary"
               style={{ textDecoration: "none", display: "inline-block", fontSize: "1rem" }}
             >

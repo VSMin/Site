@@ -10,6 +10,7 @@ import BlogPage from "./pages/blog";
 import ContactPage from "./pages/contact";
 import NotFoundPage from "./pages/not-found";
 import VacancyPage from "./pages/vacancy";
+import SpeedtestPage from "./pages/speedtest";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/blog/:slug" component={BlogPage} />
         <Route path="/contacts" component={ContactPage} />
         <Route path="/vacancy" component={VacancyPage} />
+        <Route path="/speedtest" component={SpeedtestPage} />
         <Route component={NotFoundPage} />
       </Switch>
       {import.meta.env.DEV && <AgentFeedback />}
