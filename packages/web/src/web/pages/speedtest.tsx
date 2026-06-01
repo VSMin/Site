@@ -66,16 +66,31 @@ function Ring({
             stroke={color}
             strokeWidth={strokeW}
             strokeLinecap="round"
-            style={{ filter: `drop-shadow(0 0 8px ${color})`, transition: "all 0.05s linear" }}
+            style={{ filter: `drop-shadow(0 0 12px ${color}) drop-shadow(0 0 20px ${color})`, transition: "all 0.05s linear" }}
           />
         )}
-        {/* Needle dot */}
+        {/* Needle — real pointer from center */}
         {(() => {
-          const needlePt = polarToXY(START + filled, r);
-          return pct > 0 ? (
-            <circle cx={needlePt.x} cy={needlePt.y} r={strokeW * 0.55}
-              fill={color} style={{ filter: `drop-shadow(0 0 6px ${color})` }} />
-          ) : null;
+          const needleAngle = START + filled;
+          const needleTip = polarToXY(needleAngle, r * 0.82);
+          return (
+            <>
+              {/* Needle line */}
+              <line
+                x1={cx} y1={cy}
+                x2={needleTip.x} y2={needleTip.y}
+                stroke="#ffffff"
+                strokeWidth={2}
+                strokeLinecap="round"
+                style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))", transition: "all 0.05s linear" }}
+              />
+              {/* Red dot at base */}
+              <circle cx={cx} cy={cy} r={7} fill="#cc0000"
+                style={{ filter: "drop-shadow(0 0 6px #cc0000)" }} />
+              {/* White dot at center */}
+              <circle cx={cx} cy={cy} r={3} fill="#ffffff" />
+            </>
+          );
         })()}
       </svg>
 
@@ -88,15 +103,16 @@ function Ring({
       }}>
         <div style={{
           fontSize: size * 0.22,
-          fontWeight: 800,
-          letterSpacing: -1,
-          color: "#fff",
+          fontWeight: 700,
+          letterSpacing: 1,
+          color: "#00ff41",
           lineHeight: 1,
-          fontVariantNumeric: "tabular-nums",
+          fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+          textShadow: "0 0 10px #00ff41, 0 0 20px #00cc33",
         }}>
           {value < 1 && value > 0 ? value.toFixed(1) : Math.round(value)}
         </div>
-        <div style={{ fontSize: size * 0.085, color: "rgba(255,255,255,0.4)", marginTop: 4 }}>{unit}</div>
+        <div style={{ fontSize: size * 0.085, color: "rgba(255,255,255,0.4)", marginTop: 4, fontFamily: "'Share Tech Mono', monospace" }}>{unit}</div>
         <div style={{ fontSize: size * 0.075, color: color, textTransform: "uppercase", letterSpacing: 2, marginTop: 6, fontWeight: 700 }}>{label}</div>
       </div>
     </div>
@@ -172,11 +188,11 @@ function ClientView() {
   };
 
   const phaseColor: Record<Phase, string> = {
-    idle: "var(--accent)",
+    idle: "#cc0000",
     ping: "#e0e0e0",
-    download: "#4af",
-    upload: "#4f4",
-    done: "var(--accent)",
+    download: "#dd0000",
+    upload: "#dd0000",
+    done: "#cc0000",
   };
 
   const currentColor = phaseColor[phase];
@@ -258,8 +274,8 @@ function ClientView() {
       {/* Metrics row */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
         <MetricCard label="Задержка · Ping" value={ping} unit="мс" color="#e0e0e0" active={phase === "ping"} />
-        <MetricCard label="Download" value={download} unit="Мбит/с" color="#4af" active={phase === "download"} />
-        <MetricCard label="Upload" value={upload} unit="Мбит/с" color="#4f4" active={phase === "upload"} />
+        <MetricCard label="Download" value={download} unit="Мбит/с" color="#dd0000" active={phase === "download"} />
+        <MetricCard label="Upload" value={upload} unit="Мбит/с" color="#dd0000" active={phase === "upload"} />
       </div>
 
       {/* Speed bars (visible after test) */}
@@ -344,7 +360,7 @@ function GuestView() {
           max={300}
           label={phase === "ping" ? "PING" : isBlocked ? "ЗАБЛОК." : "DOWNLOAD"}
           unit={phase === "ping" ? "мс" : "Мбит/с"}
-          color={isBlocked ? "#e33" : phase === "ping" ? "#aaa" : "#4af"}
+          color={isBlocked ? "#cc0000" : phase === "ping" ? "#aaa" : "#dd0000"}
           size={240}
         />
 
