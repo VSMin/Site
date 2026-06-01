@@ -117,6 +117,27 @@ export default function ServiceDetailPage() {
         </section>
       )}
 
+      {/* FAQ */}
+      {service.faq && service.faq.length > 0 && (
+        <section style={{ padding: "80px 24px", background: "#111" }}>
+          <div style={{ maxWidth: 800, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <div style={{ color: "var(--accent)", fontSize: "0.85rem", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>FAQ</div>
+              <h2 style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)", fontWeight: 800 }}>Частые вопросы</h2>
+            </div>
+            {service.faq.map((item: { q: string; a: string }, i: number) => (
+              <details key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "20px 0" }}>
+                <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "1.05rem", color: "#fff", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  {item.q}
+                  <span style={{ color: "var(--accent)", fontSize: "1.4rem", lineHeight: 1, flexShrink: 0, marginLeft: 16 }}>+</span>
+                </summary>
+                <p style={{ marginTop: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Contact Form */}
       <section style={{ padding: "80px 24px", background: "#0A0A0A" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
