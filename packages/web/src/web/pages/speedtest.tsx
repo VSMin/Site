@@ -395,25 +395,7 @@ function GuestView() {
           size={240}
         />
 
-        {/* Blocked overlay */}
-        {isBlocked && (
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-          }}>
-            <div style={{
-              width: 90, height: 90, borderRadius: "50%",
-              background: "rgba(180,0,0,0.85)",
-              boxShadow: "0 0 30px rgba(200,0,0,0.5)",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              fontWeight: 800, fontSize: "0.75rem", color: "#fff", letterSpacing: 0.5,
-              textAlign: "center", padding: 10,
-            }}>
-              ДОСТУП<br />ЗАКРЫТ
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Phase tabs */}
