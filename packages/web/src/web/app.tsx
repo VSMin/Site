@@ -28,7 +28,6 @@ function App() {
         <Route component={NotFoundPage} />
       </Switch>
       {import.meta.env.DEV && <AgentFeedback />}
-      {<RunableBadge />}
     </Provider>
   );
 }
