@@ -395,10 +395,10 @@ export function ParticleCanvas() {
 
     // Цвета по кругу: красный → жёлтый → белый → голубой
     const COLOR_CYCLE: [number,number,number][] = [
-      [227, 30, 36],
+      [100, 160, 255],
       [255, 200, 0],
       [255, 255, 255],
-      [0, 180, 255],
+      [0, 220, 255],
     ];
     let nextColorIdx = 1; // следующий цвет после взрыва
 
@@ -421,7 +421,7 @@ export function ParticleCanvas() {
     }
 
     const rand = (a: number, b: number) => a + Math.random() * (b - a);
-    const defaultColor: [number,number,number] = [227, 30, 36];
+    const defaultColor: [number,number,number] = [100, 160, 255];
 
     const makeParticle = (): Particle => ({
       x: rand(0, canvas.width),
