@@ -4,119 +4,127 @@ import { ParticleCanvas } from "../components/particle-canvas";
 type Status = "loading" | "client" | "guest";
 type Phase = "idle" | "ping" | "download" | "upload" | "done";
 
-// ── Circular speedometer — Canvas based, coordinates in physical pixels (no ctx.scale) ──
+// ── Circular speedometer — exact port of original HTML drawGauge() ──────────
 function Ring({
   value, max, label, unit, color, size = 220,
 }: {
   value: number; max: number; label: string; unit: string; color: string; size?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dprRef    = useRef(1);
   const pct = Math.min(1, value / max);
 
-  // ── Init only on mount / size change — sets physical canvas dimensions ───
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Resize canvas to physical pixels (same as resizeGauge() in original)
     const dpr = window.devicePixelRatio || 1;
-    dprRef.current = dpr;
-    canvas.width  = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width  = `${size}px`;
-    canvas.style.height = `${size}px`;
-  }, [size]); // only when size changes, NOT on every value update
+    const phys = size * dpr;
+    if (canvas.width !== phys || canvas.height !== phys) {
+      canvas.width  = phys;
+      canvas.height = phys;
+      canvas.style.width  = `${size}px`;
+      canvas.style.height = `${size}px`;
+    }
 
-  // ── Draw — runs on every value/color change, never touches canvas.width ──
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dpr = dprRef.current;
     const ctx = canvas.getContext("2d")!;
-
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.width, h = canvas.height;
     const cx = w / 2, cy = h / 2;
 
-    // Arc geometry in physical px (same pattern as original HTML index.html)
-    const S     = Math.PI * 0.75;   // 135° → ~7-8 o'clock (lower-left) — matches original
-    const E     = Math.PI * 2.25;   // 405° → ~4-5 o'clock (lower-right)
-    const SWEEP = E - S;            // 270°
-    const R     = size * 0.40 * dpr;
-    const sw    = size * 0.055 * dpr;
+    // ── Geometry (exact copy of original drawGauge) ──────────────────────
+    const R     = Math.min(w, h) / 2 * 0.78;   // same as original
+    const S     = Math.PI * 0.75;               // 135°
+    const E     = Math.PI * 2.25;               // 405°
+    const SWEEP = E - S;                        // 270°
+    const ang   = S + SWEEP * pct;
 
     ctx.clearRect(0, 0, w, h);
 
-    // ── Track ──────────────────────────────────────────────────────────────
+    // Track background
     ctx.beginPath();
-    ctx.arc(cx, cy, R, S, E, false);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth   = sw;
+    ctx.arc(cx, cy, R, S, E);
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth   = 14 * dpr;
     ctx.lineCap     = "round";
     ctx.stroke();
 
-    // ── Fill arc ────────────────────────────────────────────────────────────
-    if (pct > 0) {
-      const fillEnd = S + pct * SWEEP;
-      // glow pass (wider, transparent)
+    // Tick marks
+    for (let i = 0; i <= 10; i++) {
+      const a  = S + SWEEP * (i / 10);
+      const r1 = R - 20 * dpr, r2 = R - 8 * dpr;
       ctx.beginPath();
-      ctx.arc(cx, cy, R, S, fillEnd, false);
-      ctx.strokeStyle = color + "44";
-      ctx.lineWidth   = sw * 1.8;
-      ctx.lineCap     = "round";
-      ctx.stroke();
-      // main fill
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, S, fillEnd, false);
-      ctx.strokeStyle = color;
-      ctx.lineWidth   = sw;
-      ctx.lineCap     = "round";
+      ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+      ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
+      ctx.strokeStyle = i / 10 <= pct ? "rgba(232,25,44,0.5)" : "rgba(255,255,255,0.07)";
+      ctx.lineWidth   = 1.5 * dpr;
+      ctx.lineCap     = "square";
       ctx.stroke();
     }
 
-    // ── Tick marks ──────────────────────────────────────────────────────────
-    for (let i = 0; i <= 8; i++) {
-      const angle = S + (i / 8) * SWEEP;
-      const cos = Math.cos(angle), sin = Math.sin(angle);
-      const inner = R - sw * 0.9;
-      const outer = R + sw * 0.1;
+    if (value > 0.5) {
+      // Glow underneath
       ctx.beginPath();
-      ctx.moveTo(cx + cos * inner, cy + sin * inner);
-      ctx.lineTo(cx + cos * outer, cy + sin * outer);
-      ctx.strokeStyle = "rgba(255,255,255,0.2)";
-      ctx.lineWidth   = (i % 4 === 0 ? 2 : 1) * dpr;
-      ctx.lineCap     = "butt";
+      ctx.arc(cx, cy, R, S, ang);
+      ctx.strokeStyle = "rgba(232,25,44,0.2)";
+      ctx.lineWidth   = 24 * dpr;
+      ctx.lineCap     = "round";
       ctx.stroke();
+
+      // Main arc — linear gradient from start to end point (same as original)
+      const lg = ctx.createLinearGradient(
+        cx + Math.cos(S)   * R, cy + Math.sin(S)   * R,
+        cx + Math.cos(ang) * R, cy + Math.sin(ang) * R,
+      );
+      lg.addColorStop(0,   "rgba(140,0,16,0.8)");
+      lg.addColorStop(0.6, "rgba(232,25,44,1)");
+      lg.addColorStop(1,   "rgba(255,80,100,1)");
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, S, ang);
+      ctx.strokeStyle = lg;
+      ctx.lineWidth   = 14 * dpr;
+      ctx.lineCap     = "round";
+      ctx.stroke();
+
+      // Tip glow dot
+      ctx.shadowColor = "rgba(255,60,60,0.9)";
+      ctx.shadowBlur  = 18 * dpr;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 5 * dpr, 0, Math.PI * 2);
+      ctx.fillStyle = "#fff";
+      ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
-    // ── Needle ──────────────────────────────────────────────────────────────
-    const needleAngle = S + pct * SWEEP;
-    const nLen  = R * 0.80;
-    const nBase = R * 0.15;
+    // ── Needle (same as original) ─────────────────────────────────────────
+    const needleLen  = R * 0.72;
+    const needleBase = R * 0.18;
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(needleAngle);
-    const ng = ctx.createLinearGradient(-nBase, 0, nLen, 0);
-    ng.addColorStop(0, "rgba(200,0,0,0.6)");
-    ng.addColorStop(0.3, "#ffffff");
-    ng.addColorStop(1, "#ffffff");
+    ctx.rotate(ang);
+    ctx.shadowColor = "rgba(232,25,44,0.6)";
+    ctx.shadowBlur  = 12 * dpr;
     ctx.beginPath();
-    ctx.moveTo(-nBase * 0.3, -2 * dpr);
-    ctx.lineTo(nLen, 0);
-    ctx.lineTo(-nBase * 0.3, 2 * dpr);
+    ctx.moveTo(-needleBase * 0.3, -3 * dpr);
+    ctx.lineTo(needleLen, 0);
+    ctx.lineTo(-needleBase * 0.3,  3 * dpr);
     ctx.closePath();
+    const ng = ctx.createLinearGradient(-needleBase, 0, needleLen, 0);
+    ng.addColorStop(0,   "rgba(255,255,255,0.3)");
+    ng.addColorStop(0.4, "#e8192c");
+    ng.addColorStop(1,   "#fff");
     ctx.fillStyle = ng;
     ctx.fill();
-    ctx.restore();
-
-    // ── Center hub ──────────────────────────────────────────────────────────
+    ctx.shadowBlur = 0;
+    // Center hub
     ctx.beginPath();
-    ctx.arc(cx, cy, 7 * dpr, 0, Math.PI * 2);
+    ctx.arc(0, 0, 8 * dpr, 0, Math.PI * 2);
     ctx.fillStyle = "#1a1a22";
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(cx, cy, 4 * dpr, 0, Math.PI * 2);
-    ctx.fillStyle = "#cc0000";
+    ctx.arc(0, 0, 5 * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = "#e8192c";
     ctx.fill();
+    ctx.restore();
 
   }, [value, color, size, pct]);
 
