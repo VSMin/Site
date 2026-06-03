@@ -29,10 +29,12 @@ function Ring({
 
     const ctx = canvas.getContext("2d")!;
     const w = canvas.width, h = canvas.height;
-    const cx = w / 2, cy = h / 2;
+    const cx = w / 2;
+    // Shift center up slightly so the bottom arc + glow fits within canvas
+    const cy = h / 2 - 10 * dpr;
 
     // ── Geometry (exact copy of original drawGauge) ──────────────────────
-    const R     = Math.min(w, h) / 2 * 0.78;   // same as original
+    const R     = Math.min(w, h) / 2 * 0.72;   // slightly smaller to fit glow within canvas
     const S     = Math.PI * 0.75;               // 135°
     const E     = Math.PI * 2.25;               // 405°
     const SWEEP = E - S;                        // 270°
@@ -55,45 +57,12 @@ function Ring({
       ctx.beginPath();
       ctx.moveTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
       ctx.lineTo(cx + Math.cos(a) * r2, cy + Math.sin(a) * r2);
-      ctx.strokeStyle = i / 10 <= pct ? "rgba(232,25,44,0.5)" : "rgba(255,255,255,0.07)";
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
       ctx.lineWidth   = 1.5 * dpr;
       ctx.lineCap     = "square";
       ctx.stroke();
     }
 
-    if (value > 0.5) {
-      // Glow underneath
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, S, ang);
-      ctx.strokeStyle = "rgba(232,25,44,0.2)";
-      ctx.lineWidth   = 24 * dpr;
-      ctx.lineCap     = "round";
-      ctx.stroke();
-
-      // Main arc — linear gradient from start to end point (same as original)
-      const lg = ctx.createLinearGradient(
-        cx + Math.cos(S)   * R, cy + Math.sin(S)   * R,
-        cx + Math.cos(ang) * R, cy + Math.sin(ang) * R,
-      );
-      lg.addColorStop(0,   "rgba(140,0,16,0.8)");
-      lg.addColorStop(0.6, "rgba(232,25,44,1)");
-      lg.addColorStop(1,   "rgba(255,80,100,1)");
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, S, ang);
-      ctx.strokeStyle = lg;
-      ctx.lineWidth   = 14 * dpr;
-      ctx.lineCap     = "round";
-      ctx.stroke();
-
-      // Tip glow dot
-      ctx.shadowColor = "rgba(255,60,60,0.9)";
-      ctx.shadowBlur  = 18 * dpr;
-      ctx.beginPath();
-      ctx.arc(cx + Math.cos(ang) * R, cy + Math.sin(ang) * R, 5 * dpr, 0, Math.PI * 2);
-      ctx.fillStyle = "#fff";
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    }
 
     // ── Needle (same as original) ─────────────────────────────────────────
     const needleLen  = R * 0.72;
