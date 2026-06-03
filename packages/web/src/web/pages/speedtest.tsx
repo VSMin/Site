@@ -1,122 +1,128 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ParticleCanvas } from "../components/particle-canvas";
 
 type Status = "loading" | "client" | "guest";
 type Phase = "idle" | "ping" | "download" | "upload" | "done";
 
-// ── Circular speedometer — Canvas based, no SVG arc bugs ─────────────────────
+// ── Circular speedometer — Canvas based, coordinates in physical pixels (no ctx.scale) ──
 function Ring({
   value, max, label, unit, color, size = 220,
 }: {
   value: number; max: number; label: string; unit: string; color: string; size?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dprRef    = useRef(1);
   const pct = Math.min(1, value / max);
 
-  // Canvas arc angles: 0 = right (3 o'clock), clockwise
-  // We want start at ~210° left-bottom, sweep 240° clockwise → end at ~30°
-  // In canvas radians: start = 150° = 5π/6, end = 150° + 240° = 390° = 13π/6
-  const DEG = Math.PI / 180;
-  const START_RAD = 150 * DEG;   // lower-left
-  const SWEEP_RAD = 240 * DEG;   // 240° sweep
-  const END_RAD   = START_RAD + SWEEP_RAD;
-
-  const cx = size / 2, cy = size / 2;
-  const r  = size * 0.42;
-  const sw = size * 0.055; // stroke width
-
-  // ── Init: set canvas size + DPR scale — runs sync before paint ───────────
-  useLayoutEffect(() => {
+  // ── Init only on mount / size change — sets physical canvas dimensions ───
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
+    dprRef.current = dpr;
     canvas.width  = size * dpr;
     canvas.height = size * dpr;
     canvas.style.width  = `${size}px`;
     canvas.style.height = `${size}px`;
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(dpr, dpr);
-  }, [size]); // re-init only if size changes
+  }, [size]); // only when size changes, NOT on every value update
 
-  // ── Draw: redraw on value/color change (no canvas resize!) ────────────────
+  // ── Draw — runs on every value/color change, never touches canvas.width ──
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const dpr = dprRef.current;
     const ctx = canvas.getContext("2d")!;
 
-    ctx.clearRect(0, 0, size, size);
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2, cy = h / 2;
 
-    // ── Track ──
+    // Arc geometry in physical px (same pattern as original HTML index.html)
+    const S     = Math.PI * 0.75;   // 135° → ~7-8 o'clock (lower-left) — matches original
+    const E     = Math.PI * 2.25;   // 405° → ~4-5 o'clock (lower-right)
+    const SWEEP = E - S;            // 270°
+    const R     = size * 0.40 * dpr;
+    const sw    = size * 0.055 * dpr;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // ── Track ──────────────────────────────────────────────────────────────
     ctx.beginPath();
-    ctx.arc(cx, cy, r, START_RAD, END_RAD, false);
-    ctx.strokeStyle = "rgba(255,255,255,0.09)";
+    ctx.arc(cx, cy, R, S, E, false);
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
     ctx.lineWidth   = sw;
     ctx.lineCap     = "round";
     ctx.stroke();
 
-    // ── Fill arc ──
+    // ── Fill arc ────────────────────────────────────────────────────────────
     if (pct > 0) {
-      const fillEnd = START_RAD + pct * SWEEP_RAD;
+      const fillEnd = S + pct * SWEEP;
+      // glow pass (wider, transparent)
       ctx.beginPath();
-      ctx.arc(cx, cy, r, START_RAD, fillEnd, false);
+      ctx.arc(cx, cy, R, S, fillEnd, false);
+      ctx.strokeStyle = color + "44";
+      ctx.lineWidth   = sw * 1.8;
+      ctx.lineCap     = "round";
+      ctx.stroke();
+      // main fill
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, S, fillEnd, false);
       ctx.strokeStyle = color;
       ctx.lineWidth   = sw;
       ctx.lineCap     = "round";
-      ctx.shadowColor = color;
-      ctx.shadowBlur  = 18;
       ctx.stroke();
-      ctx.shadowBlur = 0;
     }
 
-    // ── Tick marks ──
+    // ── Tick marks ──────────────────────────────────────────────────────────
     for (let i = 0; i <= 8; i++) {
-      const angle = START_RAD + (i / 8) * SWEEP_RAD;
+      const angle = S + (i / 8) * SWEEP;
       const cos = Math.cos(angle), sin = Math.sin(angle);
-      const inner = r - sw * 0.85;
-      const outer = r - sw * 0.05;
+      const inner = R - sw * 0.9;
+      const outer = R + sw * 0.1;
       ctx.beginPath();
       ctx.moveTo(cx + cos * inner, cy + sin * inner);
       ctx.lineTo(cx + cos * outer, cy + sin * outer);
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
-      ctx.lineWidth   = i % 4 === 0 ? 2 : 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.lineWidth   = (i % 4 === 0 ? 2 : 1) * dpr;
       ctx.lineCap     = "butt";
-      ctx.shadowBlur  = 0;
       ctx.stroke();
     }
 
-    // ── Needle ──
-    const needleAngle = START_RAD + pct * SWEEP_RAD;
-    const nLen = r * 0.82;
+    // ── Needle ──────────────────────────────────────────────────────────────
+    const needleAngle = S + pct * SWEEP;
+    const nLen  = R * 0.80;
+    const nBase = R * 0.15;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(needleAngle);
+    const ng = ctx.createLinearGradient(-nBase, 0, nLen, 0);
+    ng.addColorStop(0, "rgba(200,0,0,0.6)");
+    ng.addColorStop(0.3, "#ffffff");
+    ng.addColorStop(1, "#ffffff");
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(needleAngle) * nLen, cy + Math.sin(needleAngle) * nLen);
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = "round";
-    ctx.shadowColor = "rgba(255,255,255,0.8)";
-    ctx.shadowBlur  = 8;
-    ctx.stroke();
-
-    // ── Base dot (red) ──
-    ctx.beginPath();
-    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-    ctx.fillStyle   = "#cc0000";
-    ctx.shadowColor = "#cc0000";
-    ctx.shadowBlur  = 12;
+    ctx.moveTo(-nBase * 0.3, -2 * dpr);
+    ctx.lineTo(nLen, 0);
+    ctx.lineTo(-nBase * 0.3, 2 * dpr);
+    ctx.closePath();
+    ctx.fillStyle = ng;
     ctx.fill();
+    ctx.restore();
 
-    // ── Center dot (white) ──
+    // ── Center hub ──────────────────────────────────────────────────────────
     ctx.beginPath();
-    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-    ctx.fillStyle  = "#ffffff";
-    ctx.shadowBlur = 0;
+    ctx.arc(cx, cy, 7 * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = "#1a1a22";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4 * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = "#cc0000";
     ctx.fill();
 
   }, [value, color, size, pct]);
 
   return (
     <div style={{ position: "relative", width: size, height: size }}>
-      <canvas ref={canvasRef} style={{ display: "block" }} />
+      <canvas ref={canvasRef} width={size} height={size} style={{ display: "block", width: size, height: size }} />
 
       {/* Center value overlay */}
       <div style={{
