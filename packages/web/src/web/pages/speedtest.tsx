@@ -64,34 +64,23 @@ function Ring({
     }
 
 
-    // ── Needle (same as original) ─────────────────────────────────────────
+    // ── Needle ───────────────────────────────────────────────────────────
     const needleLen  = R * 0.72;
     const needleBase = R * 0.18;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(ang);
-    ctx.shadowColor = "rgba(232,25,44,0.6)";
-    ctx.shadowBlur  = 12 * dpr;
     ctx.beginPath();
-    ctx.moveTo(-needleBase * 0.3, -3 * dpr);
+    ctx.moveTo(-needleBase * 0.3, -2 * dpr);
     ctx.lineTo(needleLen, 0);
-    ctx.lineTo(-needleBase * 0.3,  3 * dpr);
+    ctx.lineTo(-needleBase * 0.3,  2 * dpr);
     ctx.closePath();
-    const ng = ctx.createLinearGradient(-needleBase, 0, needleLen, 0);
-    ng.addColorStop(0,   "rgba(255,255,255,0.3)");
-    ng.addColorStop(0.4, "#e8192c");
-    ng.addColorStop(1,   "#fff");
-    ctx.fillStyle = ng;
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
     ctx.fill();
-    ctx.shadowBlur = 0;
     // Center hub
     ctx.beginPath();
-    ctx.arc(0, 0, 8 * dpr, 0, Math.PI * 2);
-    ctx.fillStyle = "#1a1a22";
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(0, 0, 5 * dpr, 0, Math.PI * 2);
-    ctx.fillStyle = "#e8192c";
+    ctx.arc(0, 0, 6 * dpr, 0, Math.PI * 2);
+    ctx.fillStyle = "#333";
     ctx.fill();
     ctx.restore();
 
