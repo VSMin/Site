@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { COMPANY, SERVICES } from "../lib/data";
+import { SSRHeadContext } from "../lib/seo";
 
 // ── SEO ────────────────────────────────────────────────────────────────────────
 interface SEOProps {
@@ -12,6 +13,12 @@ interface SEOProps {
 }
 
 export function SEO({ title, description, keywords, canonical, ogImage }: SEOProps) {
+  // SSR: во время серверного рендера записываем метаданные страницы, чтобы
+  // пререндер вписал их в <head>. В браузере провайдера нет → holder === null,
+  // и эта строка ничего не делает (клиентская логика ниже не меняется).
+  const holder = useContext(SSRHeadContext);
+  if (holder) holder.meta = { title, description, keywords, canonical, ogImage };
+
   useEffect(() => {
     document.title = `${title} | KONNEKTEAM — Уральск`;
 
