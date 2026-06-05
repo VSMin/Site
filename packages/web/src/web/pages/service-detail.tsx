@@ -1,6 +1,7 @@
 import { useRoute, Link } from "wouter";
 import { SEO, PageLayout, ContactForm } from "../components/layout";
 import { SERVICES } from "../lib/data";
+import { serviceJsonLd } from "../lib/jsonld";
 
 export default function ServiceDetailPage() {
   const [, params] = useRoute("/services/:slug");
@@ -23,9 +24,10 @@ export default function ServiceDetailPage() {
     <PageLayout>
       <SEO
         title={service.title}
-        description={service.metaDescription || service.shortDesc}
+        description={(service as any).metaDescription || service.shortDesc}
         keywords={`${service.title} Уральск, ${service.category} Уральск`}
         canonical={`https://konnekteam.kz/services/${service.slug}`}
+        jsonLd={serviceJsonLd(service)}
       />
 
       {/* Breadcrumb */}

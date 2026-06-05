@@ -1,6 +1,7 @@
 import { useRoute, Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { BLOG_POSTS } from "../lib/data";
+import { articleJsonLd } from "../lib/jsonld";
 
 function BlogList() {
   return (
@@ -87,6 +88,8 @@ function BlogPost({ slug }: { slug: string }) {
         description={post.excerpt}
         keywords={`${post.title}, ${post.category}, IT Уральск`}
         canonical={`https://konnekteam.kz/blog/${post.slug}`}
+        ogImage={typeof post.image === "string" ? `https://konnekteam.kz${post.image}` : undefined}
+        jsonLd={articleJsonLd(post)}
       />
 
       <section style={{ paddingTop: 120, paddingBottom: 0, paddingLeft: 24, paddingRight: 24, background: "#0A0A0A" }}>
