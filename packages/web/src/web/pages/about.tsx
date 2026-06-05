@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { COMPANY } from "../lib/data";
+import { Target, Eye, TrendingUp, Handshake } from "lucide-react";
 
 const TEAM = [
   { name: "Владимир Мин", role: "Директор", desc: "25+ лет в IT-индустрии, специализация — сетевая инфраструктура и проектное управление.", photo: "/team/vladimir.webp" },
@@ -21,10 +22,10 @@ const TIMELINE = [
 ];
 
 const VALUES = [
-  { icon: "🎯", title: "Результат", desc: "Мы берём на себя ответственность и доводим каждый проект до результата — в срок и в рамках бюджета." },
-  { icon: "🔍", title: "Прозрачность", desc: "Договор, техническое задание, акты работ — никаких скрытых платежей и устных договорённостей." },
-  { icon: "📈", title: "Развитие", desc: "Постоянно обучаемся, проходим сертификацию, следим за новыми технологиями и внедряем лучшее." },
-  { icon: "🤝", title: "Партнёрство", desc: "Относимся к задачам клиента как к своим — предлагаем оптимальные решения, а не самые дорогие." },
+  { Icon: Target, title: "Результат", desc: "Мы берём на себя ответственность и доводим каждый проект до результата — в срок и в рамках бюджета." },
+  { Icon: Eye, title: "Прозрачность", desc: "Договор, техническое задание, акты работ — никаких скрытых платежей и устных договорённостей." },
+  { Icon: TrendingUp, title: "Развитие", desc: "Постоянно обучаемся, проходим сертификацию, следим за новыми технологиями и внедряем лучшее." },
+  { Icon: Handshake, title: "Партнёрство", desc: "Относимся к задачам клиента как к своим — предлагаем оптимальные решения, а не самые дорогие." },
 ];
 
 export default function AboutPage() {
@@ -101,7 +102,9 @@ export default function AboutPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
             {VALUES.map(v => (
               <div key={v.title} className="card">
-                <div style={{ fontSize: "2.2rem", marginBottom: 16 }}>{v.icon}</div>
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: "rgba(227,30,36,0.1)", border: "1px solid rgba(227,30,36,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <v.Icon size={26} strokeWidth={1.6} style={{ color: "var(--accent)" }} />
+                </div>
                 <h3 style={{ fontWeight: 700, marginBottom: 10, color: "#fff" }}>{v.title}</h3>
                 <p style={{ color: "rgba(255,255,255,0.55)", lineHeight: 1.7, margin: 0 }}>{v.desc}</p>
               </div>
