@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ParticleCanvas } from "../components/particle-canvas";
+import { Navbar } from "../components/layout";
 
 type Status = "loading" | "client" | "guest";
 type Phase = "idle" | "ping" | "download" | "upload" | "done";
@@ -516,7 +517,11 @@ export default function SpeedtestPage() {
     <div style={{
       minHeight: "100vh", background: "#060608", color: "#fff",
       fontFamily: "inherit", position: "relative", overflow: "hidden",
+      paddingTop: 70,
     }}>
+      {/* Main site menu (fixed) — present on every page, incl. mobile burger */}
+      <Navbar />
+
       {/* Stars background (same as home) */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
         <ParticleCanvas />
@@ -552,7 +557,7 @@ export default function SpeedtestPage() {
       {/* Content */}
       <div style={{
         position: "relative", zIndex: 1,
-        minHeight: "calc(100vh - 58px)",
+        minHeight: "calc(100vh - 128px)",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         padding: "40px 24px 60px",
