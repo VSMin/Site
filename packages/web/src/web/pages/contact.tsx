@@ -1,5 +1,6 @@
 import { SEO, PageLayout, ContactForm } from "../components/layout";
 import { COMPANY } from "../lib/data";
+import { Phone, MessageCircle, Mail, MapPin, Clock } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -29,38 +30,40 @@ export default function ContactPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {[
                 {
-                  icon: "📞",
+                  Icon: Phone,
                   label: "Телефон",
                   value: COMPANY.phone,
                   href: `tel:${COMPANY.phone.replace(/\s/g, "")}`,
                 },
                 {
-                  icon: "💬",
+                  Icon: MessageCircle,
                   label: "WhatsApp",
                   value: COMPANY.phone,
                   href: `https://wa.me/77000981981?text=Здравствуйте%2C%20хочу%20узнать%20подробнее`,
                 },
                 {
-                  icon: "📧",
+                  Icon: Mail,
                   label: "Email",
                   value: COMPANY.email,
                   href: `mailto:${COMPANY.email}`,
                 },
                 {
-                  icon: "📍",
+                  Icon: MapPin,
                   label: "Адрес",
                   value: COMPANY.address,
                   href: undefined,
                 },
                 {
-                  icon: "🕐",
+                  Icon: Clock,
                   label: "Режим работы",
                   value: COMPANY.workingHours,
                   href: undefined,
                 },
               ].map(c => (
                 <div key={c.label} className="card" style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <div style={{ fontSize: "1.5rem", flexShrink: 0 }}>{c.icon}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, background: "rgba(227,30,36,0.1)", border: "1px solid rgba(227,30,36,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <c.Icon size={20} strokeWidth={1.7} style={{ color: "var(--accent)" }} />
+                  </div>
                   <div>
                     <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>{c.label}</div>
                     {c.href ? (
