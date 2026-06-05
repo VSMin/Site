@@ -10,14 +10,19 @@ interface SEOProps {
   keywords?: string;
   canonical?: string;
   ogImage?: string;
+  // Структурированные данные Schema.org: один объект или массив объектов.
+  jsonLd?: object | object[];
 }
 
-export function SEO({ title, description, keywords, canonical, ogImage }: SEOProps) {
+export function SEO({ title, description, keywords, canonical, ogImage, jsonLd }: SEOProps) {
+  // Нормализуем в массив один раз.
+  const ld: object[] = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+
   // SSR: во время серверного рендера записываем метаданные страницы, чтобы
   // пререндер вписал их в <head>. В браузере провайдера нет → holder === null,
   // и эта строка ничего не делает (клиентская логика ниже не меняется).
   const holder = useContext(SSRHeadContext);
-  if (holder) holder.meta = { title, description, keywords, canonical, ogImage };
+  if (holder) holder.meta = { title, description, keywords, canonical, ogImage, jsonLd: ld };
 
   useEffect(() => {
     document.title = `${title} | KONNEKTEAM — Уральск`;
@@ -57,6 +62,25 @@ export function SEO({ title, description, keywords, canonical, ogImage }: SEOPro
     if (!link) { link = document.createElement("link"); link.rel = "canonical"; document.head.appendChild(link); }
     link.href = canonical || "https://konnekteam.kz";
   }, [title, description, keywords, canonical, ogImage]);
+
+  // JSON-LD: при SPA-навигации обновляем структурированные данные в <head>.
+  // На сервере уже впечатано пререндером; здесь — синхронизация на клиенте.
+  const ldKey = JSON.stringify(ld);
+  useEffect(() => {
+    document.querySelectorAll("script[data-seo-jsonld]").forEach((s) => s.remove());
+    const arr = ldKey ? (JSON.parse(ldKey) as object[]) : [];
+    for (const obj of arr) {
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.setAttribute("data-seo-jsonld", "");
+      s.textContent = JSON.stringify(obj);
+      document.head.appendChild(s);
+    }
+    return () => {
+      document.querySelectorAll("script[data-seo-jsonld]").forEach((s) => s.remove());
+    };
+  }, [ldKey]);
+
   return null;
 }
 
