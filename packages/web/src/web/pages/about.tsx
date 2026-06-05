@@ -3,11 +3,11 @@ import { SEO, PageLayout } from "../components/layout";
 import { COMPANY } from "../lib/data";
 
 const TEAM = [
-  { name: "Владимир Мин", role: "Директор", desc: "25+ лет в IT-индустрии, специализация — сетевая инфраструктура и проектное управление.", photo: "/team/vladimir.webp" },
-  { name: "Максим Кузнецов", role: "Руководитель отдела продаж", desc: "Сопровождение клиентов от первичной заявки до закрытия проекта. Опыт более 10 лет.", photo: "/team/maxim.webp" },
-  { name: "Зульфия Ермекова", role: "Администратор", desc: "Координирует заявки и документооборот, заботится о клиентах и держит работу офиса в порядке. Внимательна к деталям.", photo: "/team/zulfiya.webp" },
-  { name: "Андрей Артемьев", role: "Начальник технического отдела", desc: "Сертифицированный Mikrotik MTCRE. Проектировал сети для 60+ коммерческих объектов.", photo: "/team/andrey.webp" },
-  { name: "Александр Тимошук", role: "Ведущий инженер по видеонаблюдению", desc: "Монтаж и настройка CCTV систем — Hikvision, Dahua. 50+ реализованных объектов.", photo: "/team/alexander.webp" },
+  { name: "Владимир Мин", role: "Директор", desc: "25+ лет в IT-индустрии, специализация — сетевая инфраструктура и проектное управление.", photo: "/team/vladimir.png" },
+  { name: "Максим Кузнецов", role: "Руководитель отдела продаж", desc: "Сопровождение клиентов от первичной заявки до закрытия проекта. Опыт более 10 лет.", photo: "/team/maxim.png" },
+  { name: "Зульфия Ермекова", role: "Администратор", desc: "Координирует заявки и документооборот, встречает клиентов и держит работу офиса в порядке. Внимательна к деталям.", photo: "/team/zulfiya.webp" },
+  { name: "Андрей Артемьев", role: "Начальник технического отдела", desc: "Сертифицированный Mikrotik MTCRE. Проектировал сети для 60+ коммерческих объектов.", photo: "/team/andrey.png" },
+  { name: "Александр Тимошук", role: "Ведущий инженер по видеонаблюдению", desc: "Монтаж и настройка CCTV систем — Hikvision, Dahua. 50+ реализованных объектов.", photo: "/team/alexander.png" },
 ];
 
 const TIMELINE = [
@@ -117,7 +117,7 @@ export default function AboutPage() {
             <div style={{ color: "var(--accent)", fontSize: "0.85rem", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>Люди</div>
             <h2 style={{ fontSize: "clamp(1.8rem, 3vw, 2.4rem)", fontWeight: 800 }}>Команда</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24 }}>
             {TEAM.map(m => (
               <div key={m.name} className="card" style={{ textAlign: "center" }}>
                 <div style={{ width: 96, height: 96, borderRadius: "50%", border: "2px solid rgba(227,30,36,0.4)", margin: "0 auto 20px", overflow: "hidden" }}>
