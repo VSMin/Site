@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { SERVICES } from "../lib/data";
+import { ServiceIconBox } from "../components/service-icons";
 
 export default function ServicesPage() {
   return (
@@ -40,7 +41,7 @@ export default function ServicesPage() {
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                    <div style={{ fontSize: "2.4rem" }}>{s.icon}</div>
+                    <ServiceIconBox slug={s.slug} box={56} size={28} />
                     <div style={{ background: "rgba(227,30,36,0.1)", border: "1px solid rgba(227,30,36,0.2)", borderRadius: 4, padding: "3px 10px", fontSize: "0.75rem", color: "var(--accent)", whiteSpace: "nowrap" }}>
                       {s.category}
                     </div>

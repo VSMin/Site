@@ -2,6 +2,7 @@ import { useRoute, Link } from "wouter";
 import { SEO, PageLayout, ContactForm } from "../components/layout";
 import { SERVICES } from "../lib/data";
 import { serviceJsonLd } from "../lib/jsonld";
+import { ServiceIconBox } from "../components/service-icons";
 
 export default function ServiceDetailPage() {
   const [, params] = useRoute("/services/:slug");
@@ -50,7 +51,7 @@ export default function ServiceDetailPage() {
             <div style={{ display: "inline-block", background: "rgba(227,30,36,0.1)", border: "1px solid rgba(227,30,36,0.2)", borderRadius: 4, padding: "4px 12px", fontSize: "0.8rem", color: "var(--accent)", marginBottom: 20 }}>
               {service.category}
             </div>
-            <div style={{ fontSize: "3rem", marginBottom: 16 }}>{service.icon}</div>
+            <div style={{ marginBottom: 16 }}><ServiceIconBox slug={service.slug} box={64} size={32} /></div>
             <h1 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 800, marginBottom: 20 }}>{service.title}</h1>
             <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.8, maxWidth: 640 }}>{service.fullDesc}</p>
             <div style={{ marginTop: 32, display: "flex", gap: 16, flexWrap: "wrap" }}>
@@ -161,7 +162,7 @@ export default function ServiceDetailPage() {
                     onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(227,30,36,0.4)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
                   >
-                    <div style={{ fontSize: "1.8rem", marginBottom: 10 }}>{s.icon}</div>
+                    <div style={{ marginBottom: 10 }}><ServiceIconBox slug={s.slug} box={44} size={22} /></div>
                     <div style={{ fontWeight: 600, color: "#fff", fontSize: "0.95rem" }}>{s.title}</div>
                   </div>
                 </a>

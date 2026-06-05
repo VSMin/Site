@@ -3,6 +3,8 @@ import { Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { SERVICES, REVIEWS, COMPANY } from "../lib/data";
 import { ParticleCanvas, HOME_FAQ as FAQ, FAQItem } from "../components/particle-canvas";
+import { ServiceIconBox } from "../components/service-icons";
+import { Zap, ShieldCheck, Wrench, Briefcase, PhoneCall, FileCheck } from "lucide-react";
 // ── Home Page ─────────────────────────────────────────────────────────────────
 export default function HomePage() {
   return (
@@ -82,7 +84,7 @@ export default function HomePage() {
                     onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(227,30,36,0.4)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "none"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.06)"; }}
                   >
-                    <div style={{ fontSize: "2.2rem", marginBottom: 16 }}>{s.icon}</div>
+                    <div style={{ marginBottom: 16 }}><ServiceIconBox slug={s.slug} box={52} size={26} /></div>
                     <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 10, color: "#fff" }}>{s.title}</h3>
                     <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{s.shortDesc}</p>
                     <div style={{ marginTop: 16, color: "var(--accent)", fontSize: "0.9rem", fontWeight: 600 }}>Подробнее →</div>
@@ -108,15 +110,17 @@ export default function HomePage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 28 }}>
             {[
-              { icon: "⚡", title: "Быстрый выезд", desc: "Специалист приедет в течение 2–4 часов по Уральску" },
-              { icon: "🛡️", title: "Гарантия качества", desc: "На все работы — гарантия от 6 до 24 месяцев" },
-              { icon: "🔧", title: "Полный цикл", desc: "Проектирование, монтаж, настройка и дальнейшее сопровождение" },
-              { icon: "💼", title: "Опыт с 2010 года", desc: "Реализовали более 350 проектов разного масштаба" },
-              { icon: "📞", title: "Техподдержка 24/7", desc: "Всегда на связи — звонок, WhatsApp или удалённое подключение" },
-              { icon: "📋", title: "Договор и отчёты", desc: "Официальный договор, акты выполненных работ, гарантийные талоны" },
+              { Icon: Zap, title: "Быстрый выезд", desc: "Специалист приедет в течение 2–4 часов по Уральску" },
+              { Icon: ShieldCheck, title: "Гарантия качества", desc: "На все работы — гарантия от 6 до 24 месяцев" },
+              { Icon: Wrench, title: "Полный цикл", desc: "Проектирование, монтаж, настройка и дальнейшее сопровождение" },
+              { Icon: Briefcase, title: "Опыт с 2010 года", desc: "Реализовали более 350 проектов разного масштаба" },
+              { Icon: PhoneCall, title: "Техподдержка 24/7", desc: "Всегда на связи — звонок, WhatsApp или удалённое подключение" },
+              { Icon: FileCheck, title: "Договор и отчёты", desc: "Официальный договор, акты выполненных работ, гарантийные талоны" },
             ].map(w => (
               <div key={w.title} className="card">
-                <div style={{ fontSize: "2rem", marginBottom: 14 }}>{w.icon}</div>
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: "rgba(227,30,36,0.1)", border: "1px solid rgba(227,30,36,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  <w.Icon size={26} strokeWidth={1.6} style={{ color: "var(--accent)" }} />
+                </div>
                 <h3 style={{ fontWeight: 700, marginBottom: 8, color: "#fff" }}>{w.title}</h3>
                 <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>{w.desc}</p>
               </div>
@@ -176,7 +180,7 @@ export default function HomePage() {
               <a className="btn-primary" style={{ textDecoration: "none", display: "inline-block" }}>Оставить заявку</a>
             </Link>
             <a href={`tel:${COMPANY.phone}`} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 28px", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6, color: "#fff", fontWeight: 600 }}>
-              📞 {COMPANY.phone}
+              <PhoneCall size={18} strokeWidth={1.8} /> {COMPANY.phone}
             </a>
           </div>
         </div>
