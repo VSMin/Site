@@ -63,6 +63,15 @@ function buildHead(meta: HeadMeta | null, url: string): string {
 		`<meta name="twitter:description" content="${esc(description)}" />`,
 	].filter(Boolean);
 
+	// JSON-LD страницы (Service / BlogPosting / BreadcrumbList / FAQPage).
+	// "<" экранируем в \u003c, чтобы внутри <script> не возникло "</script>".
+	if (meta?.jsonLd?.length) {
+		for (const obj of meta.jsonLd) {
+			const json = JSON.stringify(obj).replace(/</g, "\\u003c");
+			lines.push(`<script type="application/ld+json">${json}</script>`);
+		}
+	}
+
 	return `<!--seo-->\n\t\t${lines.join("\n\t\t")}\n\t\t<!--/seo-->`;
 }
 
