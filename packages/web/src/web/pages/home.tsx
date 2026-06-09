@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { SEO, PageLayout } from "../components/layout";
 import { SERVICES, REVIEWS, COMPANY } from "../lib/data";
 import { ParticleCanvas, HOME_FAQ as FAQ, FAQItem } from "../components/particle-canvas";
+import { homeJsonLd } from "../lib/jsonld";
 import { ServiceIconBox } from "../components/service-icons";
 import { Zap, ShieldCheck, Wrench, Briefcase, PhoneCall, FileCheck } from "lucide-react";
 // ── Home Page ─────────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ export default function HomePage() {
         description="Интернет для бизнеса, видеонаблюдение, информационная безопасность в Уральске. Выезд за 2–4 часа, работаем с 2010 года. Оставьте заявку — ответим за 15 минут."
         keywords="IT услуги Уральск, интернет для бизнеса Уральск, видеонаблюдение Уральск, информационная безопасность Уральск, телекоммуникации Уральск, KONNEKTEAM"
         canonical="https://konnekteam.kz/"
+        jsonLd=
       />
 
       {/* HERO */}
