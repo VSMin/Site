@@ -1,4 +1,51 @@
+# robots.txt — konnekteam.kz
+# Сайт открыт для всех поисковых и AI-краулеров.
+
 User-agent: *
+Allow: /
+
+# ── Явно приветствуем AI-движки (GEO) ──────────────────────────────────────
+# Эти боты собирают/цитируют контент в ответах ИИ-ассистентов и AI-поиске.
+# Явное Allow страхует от случайной блокировки и однозначно разрешает доступ.
+
+# OpenAI (ChatGPT, AI-поиск)
+User-agent: GPTBot
+Allow: /
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+
+# Anthropic (Claude)
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+
+# Google (использование контента в Gemini / AI Overviews / Vertex)
+User-agent: Google-Extended
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (база, на которой обучаются многие ИИ)
+User-agent: CCBot
+Allow: /
+
+# Microsoft Copilot / Bing
+User-agent: bingbot
 Allow: /
 
 Sitemap: https://konnekteam.kz/sitemap.xml
