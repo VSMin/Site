@@ -392,6 +392,7 @@ export function PageLayout({ children }: { children: React.ReactNode }) {
 //   • Показывает статус: «Отправляем…» → экран «Заявка отправлена ✓».
 //   • Кнопка WhatsApp осталась ОТДЕЛЬНЫМ каналом (звонки / свободные сообщения).
 //   • Поля формы и их внешний вид не изменились.
+//   • [Пакет №7] Защита от ботов: скрытое поле-ловушка + минимальное время заполнения.
 //
 //  Где взять URL: EspoCRM → Администрирование → Lead Capture → ваша запись.
 //  В нём должны быть включены Payload Fields: First Name, Last Name,
@@ -408,11 +409,16 @@ const ESPO_LEAD_CAPTURE_URL =
 export function ContactForm({ defaultService = "" }: { defaultService?: string }) {
   const [form, setForm] = useState({ name: "", phone: "", company: "", service: defaultService, message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
+  // Антиспам: боты заполняют скрытое поле и отправляют форму мгновенно.
+  const [hp, setHp] = useState("");
+  const [startedAt] = useState(() => Date.now());
   // SERVICES imported at top of file
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (status === "sending") return;
+    // Бот: делаем вид, что всё отправлено, но в CRM ничего не уходит.
+    if (hp || Date.now() - startedAt < 3000) { setStatus("ok"); return; }
     setStatus("sending");
 
     // Имя «Иван Петров» → firstName="Иван", lastName="Петров".
@@ -499,7 +505,11 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative" }}>
+      {/* Поле-ловушка для ботов: людям не видно, боты заполняют */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+        value={hp} onChange={(e) => setHp(e.target.value)}
+        style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }} />
       {[
         { k: "name", label: "Имя *", placeholder: "Иван Иванов", type: "text", req: true },
         { k: "phone", label: "Телефон *", placeholder: "+7 700 000 00 00", type: "tel", req: true },
@@ -567,4 +577,3 @@ export function ContactForm({ defaultService = "" }: { defaultService?: string }
     </form>
   );
 }
-
