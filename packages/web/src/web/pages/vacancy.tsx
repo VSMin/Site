@@ -357,7 +357,11 @@ export default function VacancyPage() {
                 резюме нужна для первичной проверки опыта.
               </p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20, position: "relative" }}>
+                {/* Поле-ловушка для ботов: людям не видно */}
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+                  value={hp} onChange={(e) => setHp(e.target.value)}
+                  style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }} />
                 {/* Name */}
                 <div>
                   <label
