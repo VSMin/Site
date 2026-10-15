@@ -3,12 +3,11 @@
   "tasks": {
     "dev": {
       "cache": false,
-      "persistent": true,
-      "passThroughEnv": ["EXPO_PACKAGER_PROXY_URL"]
+      "persistent": true
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "dist-electron/**", ".expo/**"]
+      "outputs": ["dist/**", "dist-ssr/**"]
     },
     "lint": {
       "outputs": []
@@ -16,19 +15,6 @@
     "typecheck": {
       "dependsOn": ["^typecheck"],
       "outputs": []
-    },
-    "db:generate": {
-      "cache": false
-    },
-    "db:migrate": {
-      "cache": false
-    },
-    "db:push": {
-      "cache": false
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true
     }
   }
 }
