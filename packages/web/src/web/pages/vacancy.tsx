@@ -153,6 +153,11 @@ export default function VacancyPage() {
       return;
     }
     setErrors({});
+    // Бот: показываем «успех», письмо не отправляем.
+    if (hp || Date.now() - startedAt < 30000) {
+      setStep("success");
+      return;
+    }
     setSending(true);
 
     const body =
