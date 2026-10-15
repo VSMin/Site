@@ -94,6 +94,9 @@ export default function VacancyPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [info, setInfo] = useState({ name: "", phone: "", resume: "" });
+  // Антиспам: боты заполняют скрытое поле и отправляют анкету мгновенно.
+  const [hp, setHp] = useState("");
+  const [startedAt] = useState(() => Date.now());
   const [answers, setAnswers] = useState<Record<string, string>>(
     Object.fromEntries(QUESTIONS.map((q) => [q.id, ""]))
   );
